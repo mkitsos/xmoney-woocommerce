@@ -157,18 +157,29 @@
       // Clear container.
       $("#xmoney-wc-payment-form").empty().removeClass("xmoney-ready");
 
+      // Build options with wallet settings.
+      var enableGooglePay = xmoneyWc.enableGooglePay === true || xmoneyWc.enableGooglePay === "true";
+      var enableApplePay = xmoneyWc.enableApplePay === true || xmoneyWc.enableApplePay === "true";
+      var enableSavedCards = xmoneyWc.enableSavedCards === true || xmoneyWc.enableSavedCards === "true";
+
+      console.log("xMoney wallet settings:", {
+        googlePay: enableGooglePay,
+        applePay: enableApplePay,
+        savedCards: enableSavedCards,
+      });
+
       var options = {
         locale: xmoneyWc.locale || "en-US",
         buttonType: "pay",
         displaySubmitButton: true,
-        displaySaveCardOption: xmoneyWc.enableSavedCards || false,
-        enableSavedCards: xmoneyWc.enableSavedCards || false,
+        displaySaveCardOption: enableSavedCards,
+        enableSavedCards: enableSavedCards,
         validationMode: "onBlur",
         googlePay: {
-          enabled: xmoneyWc.enableGooglePay || false,
+          enabled: enableGooglePay,
         },
         applePay: {
-          enabled: xmoneyWc.enableApplePay || false,
+          enabled: enableApplePay,
         },
         appearance: {
           theme: "light",

@@ -141,27 +141,40 @@
           publicKey: data.data.publicKey,
           orderPayload: data.data.payload,
           orderChecksum: data.data.checksum,
-          options: {
-            locale: settings.locale || "en-US",
-            displaySubmitButton: false, // We use WooCommerce's button
-            buttonType: "pay",
-            validationMode: "onBlur",
-            displaySaveCardOption: false, // Disable to avoid 404 error
-            enableSavedCards: false, // Disable saved cards
-            googlePay: {
-              enabled: false, // Disable for now to avoid issues
-            },
-            applePay: {
-              enabled: false, // Disable for now to avoid issues
-            },
-            appearance: {
-              theme: "light",
-              variables: {
-                colorPrimary: "#2271b1",
-                borderRadius: "4px",
+          options: (() => {
+            // Parse wallet settings (handle both boolean and string "true"/"false").
+            const enableGooglePay = settings.enableGooglePay === true || settings.enableGooglePay === "true";
+            const enableApplePay = settings.enableApplePay === true || settings.enableApplePay === "true";
+            const enableSavedCards = settings.enableSavedCards === true || settings.enableSavedCards === "true";
+
+            console.log("xMoney wallet settings (Blocks):", {
+              googlePay: enableGooglePay,
+              applePay: enableApplePay,
+              savedCards: enableSavedCards,
+            });
+
+            return {
+              locale: settings.locale || "en-US",
+              displaySubmitButton: false, // We use WooCommerce's button
+              buttonType: "pay",
+              validationMode: "onBlur",
+              displaySaveCardOption: enableSavedCards,
+              enableSavedCards: enableSavedCards,
+              googlePay: {
+                enabled: enableGooglePay,
               },
-            },
-          },
+              applePay: {
+                enabled: enableApplePay,
+              },
+              appearance: {
+                theme: "light",
+                variables: {
+                  colorPrimary: "#2271b1",
+                  borderRadius: "4px",
+                },
+              },
+            };
+          })(),
           onReady: () => {
             if (mountedRef.current) {
               setIsLoading(false);

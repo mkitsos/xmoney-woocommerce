@@ -31,12 +31,15 @@ class XMoney_WC_Helper {
 	 * Get base64 encoded checksum (HMAC-SHA512).
 	 *
 	 * @param array  $order_data Order data array.
-	 * @param string $secret_key Secret key from xMoney.
+	 * @param string $secret_key Secret key from xMoney (with sk_test_ or sk_live_ prefix).
 	 * @return string Base64 encoded checksum.
 	 */
 	public static function get_base64_checksum( array $order_data, string $secret_key ): string {
+		// Extract the actual secret key value (remove sk_test_ or sk_live_ prefix).
+		$secret_key_value = self::get_secret_key_value( $secret_key );
+
 		$json        = json_encode( $order_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
-		$hmac_sha512 = hash_hmac( 'sha512', $json, $secret_key, true );
+		$hmac_sha512 = hash_hmac( 'sha512', $json, $secret_key_value, true );
 		return base64_encode( $hmac_sha512 );
 	}
 
@@ -85,6 +88,25 @@ class XMoney_WC_Helper {
 		}
 
 		return strpos( $secret_key, 'sk_live_' ) === 0 || strpos( $secret_key, 'sk_test_' ) === 0;
+	}
+
+	/**
+	 * Extract the actual secret key value by removing the prefix.
+	 *
+	 * @param string $secret_key The full secret key (sk_test_xxx or sk_live_xxx).
+	 * @return string The secret key without the prefix.
+	 */
+	public static function get_secret_key_value( string $secret_key ): string {
+		if ( strpos( $secret_key, 'sk_live_' ) === 0 ) {
+			return substr( $secret_key, 8 ); // Remove 'sk_live_' (8 chars).
+		}
+
+		if ( strpos( $secret_key, 'sk_test_' ) === 0 ) {
+			return substr( $secret_key, 8 ); // Remove 'sk_test_' (8 chars).
+		}
+
+		// Return as-is if no recognized prefix.
+		return $secret_key;
 	}
 
 	/**
