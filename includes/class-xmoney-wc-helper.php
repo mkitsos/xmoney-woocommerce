@@ -23,7 +23,8 @@ class XMoney_WC_Helper {
 	 * @return string Base64 encoded JSON.
 	 */
 	public static function get_base64_json_request( array $order_data ): string {
-		return base64_encode( wp_json_encode( $order_data ) );
+		$json = json_encode( $order_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+		return base64_encode( $json );
 	}
 
 	/**
@@ -34,7 +35,8 @@ class XMoney_WC_Helper {
 	 * @return string Base64 encoded checksum.
 	 */
 	public static function get_base64_checksum( array $order_data, string $secret_key ): string {
-		$hmac_sha512 = hash_hmac( 'sha512', wp_json_encode( $order_data ), $secret_key, true );
+		$json        = json_encode( $order_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+		$hmac_sha512 = hash_hmac( 'sha512', $json, $secret_key, true );
 		return base64_encode( $hmac_sha512 );
 	}
 
@@ -144,7 +146,8 @@ class XMoney_WC_Helper {
 			);
 		}
 
-		// Build order data structure for xMoney API.
+		// Build order data structure for xMoney Embedded Checkout API.
+		// Note: Embedded Checkout uses 'publicKey', Hosted Checkout uses 'siteId'.
 		$order_payload = array(
 			'publicKey' => $configuration['public_key'],
 			'customer'  => $customer,
@@ -156,7 +159,7 @@ class XMoney_WC_Helper {
 					$order->get_order_number()
 				),
 				'type'        => 'purchase',
-				'amount'      => (int) round( $order->get_total() * 100 ), // Convert to cents.
+				'amount'      => $order->get_total(), // Amount in actual currency (e.g., 18.99).
 				'currency'    => $order->get_currency(),
 			),
 			'cardTransactionMode' => 'authAndCapture',

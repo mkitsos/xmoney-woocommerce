@@ -142,14 +142,14 @@ class XMoney_WC_Ajax
 			'email'      => $billing_data['billing_email'] ?? WC()->customer->get_billing_email() ?? '',
 		);
 
-		// Get cart total.
-		$total = WC()->cart->get_total('');
-		$total_cents = (int) round(floatval($total) * 100);
+		// Get cart total (xMoney expects amount in actual currency, not cents).
+		$total = WC()->cart->total;
 
 		// Generate temporary order ID.
 		$temp_order_id = 'temp-' . time() . '-' . wp_generate_password(8, false);
 
-		// Build order data structure for xMoney API.
+		// Build order data structure for xMoney Embedded Checkout API.
+		// Note: Embedded Checkout uses 'publicKey', Hosted Checkout uses 'siteId'.
 		$order_data = array(
 			'publicKey' => $configuration['public_key'],
 			'customer'  => $customer,
@@ -161,7 +161,7 @@ class XMoney_WC_Ajax
 					get_bloginfo('name')
 				),
 				'type'        => 'purchase',
-				'amount'      => $total_cents,
+				'amount'      => $total, // Amount in actual currency (e.g., 18.99).
 				'currency'    => get_woocommerce_currency(),
 			),
 			'cardTransactionMode' => 'authAndCapture',
@@ -195,11 +195,15 @@ class XMoney_WC_Ajax
 		}
 
 		$order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
-		$status   = isset($_POST['status']) ? sanitize_text_field(wp_unslash($_POST['status'])) : '';
+		// Accept both 'status' and 'transaction_status' (xMoney SDK uses transactionStatus).
+		$status = isset($_POST['transaction_status']) ? sanitize_text_field(wp_unslash($_POST['transaction_status'])) : '';
+		if (empty($status)) {
+			$status = isset($_POST['status']) ? sanitize_text_field(wp_unslash($_POST['status'])) : '';
+		}
 		$order_id_xmoney = isset($_POST['order_id_xmoney']) ? sanitize_text_field(wp_unslash($_POST['order_id_xmoney'])) : '';
 
-		if (! $order_id || ! $status) {
-			wp_send_json_error(array('message' => __('Missing required data.', 'xmoney-woocommerce')));
+		if (! $order_id) {
+			wp_send_json_error(array('message' => __('Missing order ID.', 'xmoney-woocommerce')));
 			return;
 		}
 
@@ -211,7 +215,9 @@ class XMoney_WC_Ajax
 		}
 
 		// Update order based on payment status.
-		if ('complete-ok' === $status) {
+		// Valid success statuses: complete-ok, in-progress, open-ok.
+		$success_statuses = array('complete-ok', 'in-progress', 'open-ok');
+		if (in_array($status, $success_statuses, true)) {
 			// Payment successful.
 			$order->payment_complete();
 			$order->add_order_note(__('Payment completed via xMoney.', 'xmoney-woocommerce'));

@@ -1,4 +1,4 @@
-# xMoney Payments for WooCommerce
+# xMoney for WooCommerce
 
 A WooCommerce payment gateway plugin that integrates xMoney Payment Form (Embedded Checkout) directly into your checkout page. Customers can complete payments without leaving your site.
 
@@ -17,7 +17,7 @@ A WooCommerce payment gateway plugin that integrates xMoney Payment Form (Embedd
 1. Download or clone this repository
 2. Upload the `xmoney-woocommerce` folder to `/wp-content/plugins/`
 3. Activate the plugin through the 'Plugins' menu in WordPress
-4. Go to WooCommerce → Settings → Payments → xMoney Payments
+4. Go to WooCommerce → Settings → Payments → xMoney
 5. Configure your API credentials
 
 ## Configuration
@@ -45,7 +45,7 @@ A WooCommerce payment gateway plugin that integrates xMoney Payment Form (Embedd
 
 ## How It Works
 
-1. Customer selects xMoney Payments as payment method on checkout
+1. Customer selects xMoney as payment method on checkout
 2. Payment form loads embedded in the checkout page
 3. Customer enters payment details (or uses saved card/digital wallet)
 4. Payment is processed securely via xMoney
