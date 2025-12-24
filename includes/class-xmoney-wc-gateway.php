@@ -169,10 +169,12 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 			$errors[] = __('Secret Key must start with sk_test_ or sk_live_.', 'xmoney-woocommerce');
 		}
 
+		// If there are validation errors, show them and don't save.
 		if (! empty($errors)) {
 			foreach ($errors as $error) {
 				WC_Admin_Settings::add_error($error);
 			}
+			return false;
 		}
 
 		$saved = parent::process_admin_options();
