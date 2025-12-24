@@ -135,20 +135,9 @@ class XMoney_WC_Helper {
 			'email'      => $order_data['billing']['email'] ?? '',
 		);
 
-		// Prepare order items.
-		$items = array();
-		foreach ( $order->get_items() as $item ) {
-			$product = $item->get_product();
-			$items[] = array(
-				'item'      => $item->get_name(),
-				'units'     => $item->get_quantity(),
-				'unitPrice' => number_format( $item->get_subtotal() / $item->get_quantity(), 2, '.', '' ),
-			);
-		}
-
 		// Build order data structure for xMoney Embedded Checkout API.
 		// Note: Embedded Checkout uses 'publicKey', Hosted Checkout uses 'siteId'.
-		$order_payload = array(
+		return array(
 			'publicKey' => $configuration['public_key'],
 			'customer'  => $customer,
 			'order'     => array(
@@ -165,8 +154,6 @@ class XMoney_WC_Helper {
 			'cardTransactionMode' => 'authAndCapture',
 			'backUrl'             => wc_get_checkout_url(),
 		);
-
-		return $order_payload;
 	}
 }
 

@@ -44,11 +44,6 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 		$this->enable_for_methods = $this->get_option('enable_for_methods', array());
 		$this->enable_for_virtual = 'yes' === $this->get_option('enable_for_virtual', 'yes');
 
-		// Fix title if it was set to "xMoney Payments" (legacy).
-		if ('xMoney Payments' === $this->title) {
-			$this->title = __('xMoney', 'xmoney-woocommerce');
-		}
-
 		// Actions.
 		add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));

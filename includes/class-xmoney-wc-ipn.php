@@ -77,8 +77,11 @@ class XMoney_WC_IPN {
 		// Note: xMoney may send signature verification in headers or data.
 		// Adjust based on actual xMoney IPN implementation.
 
-		// Process IPN based on status.
-		$status = isset( $data['status'] ) ? sanitize_text_field( $data['status'] ) : '';
+		// Process IPN based on status (xMoney uses 'transactionStatus' field).
+		$status = isset( $data['transactionStatus'] ) ? sanitize_text_field( $data['transactionStatus'] ) : '';
+		if ( empty( $status ) ) {
+			$status = isset( $data['status'] ) ? sanitize_text_field( $data['status'] ) : '';
+		}
 
 		$this->process_ipn_status( $order, $status, $data );
 

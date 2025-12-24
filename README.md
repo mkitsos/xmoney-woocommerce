@@ -7,6 +7,7 @@ A WooCommerce payment gateway plugin that integrates xMoney Payment Form (Embedd
 - ✅ **Embedded Checkout** - Payment form embedded directly on your checkout page
 - ✅ **No Redirects** - Customers stay on your site throughout the payment process
 - ✅ **PCI Compliant** - Card data never touches your servers
+- ✅ **Classic & Blocks Checkout** - Works with both WooCommerce checkout types
 - ✅ **Google Pay & Apple Pay** - Support for digital wallets
 - ✅ **Saved Cards** - Optional one-click payments for returning customers
 - ✅ **Server-to-Server Notifications** - IPN/webhook support for order status updates
@@ -58,17 +59,22 @@ A WooCommerce payment gateway plugin that integrates xMoney Payment Form (Embedd
 
 ```
 xmoney-woocommerce/
-├── xmoney-woocommerce.php    # Main plugin file
+├── xmoney-woocommerce.php           # Main plugin file
 ├── includes/
-│   ├── class-xmoney-wc-gateway.php    # Payment gateway class
-│   ├── class-xmoney-wc-helper.php     # Helper functions
-│   ├── class-xmoney-wc-ajax.php       # AJAX handlers
-│   └── class-xmoney-wc-ipn.php        # IPN/webhook handler
+│   ├── class-xmoney-wc-gateway.php  # Payment gateway class
+│   ├── class-xmoney-wc-helper.php   # Helper functions
+│   ├── class-xmoney-wc-ajax.php     # AJAX handlers
+│   ├── class-xmoney-wc-ipn.php      # IPN/webhook handler
+│   └── blocks/
+│       └── class-xmoney-wc-blocks-support.php  # Blocks checkout support
 ├── assets/
+│   ├── logo.png                     # Plugin logo
 │   ├── js/
-│   │   └── checkout.js                # Frontend JavaScript
+│   │   ├── checkout.js              # Classic checkout JS
+│   │   ├── blocks-checkout.js       # Blocks checkout JS
+│   │   └── blocks-checkout.asset.php
 │   └── css/
-│       └── checkout.css               # Frontend styles
+│       └── checkout.css             # Frontend styles
 └── README.md
 ```
 
