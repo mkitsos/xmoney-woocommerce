@@ -133,7 +133,16 @@
 
         if (!mountedRef.current) return;
 
-        console.log("Creating xMoney payment form in container:", containerId);
+        // Parse wallet settings
+        const enableGooglePay =
+          settings.enableGooglePay === true ||
+          settings.enableGooglePay === "true";
+        const enableApplePay =
+          settings.enableApplePay === true ||
+          settings.enableApplePay === "true";
+        const enableSavedCards =
+          settings.enableSavedCards === true ||
+          settings.enableSavedCards === "true";
 
         // Create payment form
         formInstanceRef.current = new window.XMoneyPaymentForm({
@@ -141,49 +150,34 @@
           publicKey: data.data.publicKey,
           orderPayload: data.data.payload,
           orderChecksum: data.data.checksum,
-          options: (() => {
-            // Parse wallet settings (handle both boolean and string "true"/"false").
-            const enableGooglePay = settings.enableGooglePay === true || settings.enableGooglePay === "true";
-            const enableApplePay = settings.enableApplePay === true || settings.enableApplePay === "true";
-            const enableSavedCards = settings.enableSavedCards === true || settings.enableSavedCards === "true";
-
-            console.log("xMoney wallet settings (Blocks):", {
-              googlePay: enableGooglePay,
-              applePay: enableApplePay,
-              savedCards: enableSavedCards,
-            });
-
-            return {
-              locale: settings.locale || "en-US",
-              displaySubmitButton: false, // We use WooCommerce's button
-              buttonType: "pay",
-              validationMode: "onBlur",
-              displaySaveCardOption: enableSavedCards,
-              enableSavedCards: enableSavedCards,
-              googlePay: {
-                enabled: enableGooglePay,
+          options: {
+            locale: settings.locale || "en-US",
+            displaySubmitButton: false,
+            buttonType: "pay",
+            validationMode: "onBlur",
+            displaySaveCardOption: enableSavedCards,
+            enableSavedCards: enableSavedCards,
+            googlePay: {
+              enabled: enableGooglePay,
+            },
+            applePay: {
+              enabled: enableApplePay,
+            },
+            appearance: {
+              theme: "light",
+              variables: {
+                colorPrimary: "#2271b1",
+                borderRadius: "4px",
               },
-              applePay: {
-                enabled: enableApplePay,
-              },
-              appearance: {
-                theme: "light",
-                variables: {
-                  colorPrimary: "#2271b1",
-                  borderRadius: "4px",
-                },
-              },
-            };
-          })(),
+            },
+          },
           onReady: () => {
             if (mountedRef.current) {
               setIsLoading(false);
               setPaymentFormReady(true);
-              console.log("xMoney payment form ready (Blocks)");
             }
           },
           onError: (err) => {
-            console.error("xMoney payment form error:", err);
             if (mountedRef.current) {
               // Don't show error for 404 on cards endpoint - it's not critical
               if (err && typeof err === "string" && err.includes("404")) {
@@ -194,12 +188,10 @@
             }
           },
           onPaymentComplete: (result) => {
-            console.log("xMoney payment complete:", result);
             window.xmoneyPaymentResult = result;
           },
         });
       } catch (err) {
-        console.error("Error initializing xMoney:", err);
         if (mountedRef.current) {
           setError(err.message || "Failed to load payment form");
           setIsLoading(false);
@@ -245,10 +237,38 @@
         }
 
         try {
-          // Clear previous result
+          // Check if payment already completed (e.g., Google Pay or Apple Pay).
+          // Wallet payments complete when user authorizes, before clicking "Place Order".
+          const existingResult = window.xmoneyPaymentResult;
+
+          if (existingResult) {
+            const txStatus =
+              existingResult.transactionStatus || existingResult.status || "";
+            const successStatuses = ["complete-ok", "in-progress", "open-ok"];
+            const isExistingSuccess = successStatuses.some(
+              (s) => txStatus.toLowerCase() === s.toLowerCase()
+            );
+
+            if (isExistingSuccess) {
+              return {
+                type: emitResponse.responseTypes.SUCCESS,
+                meta: {
+                  paymentMethodData: {
+                    xmoney_payment_result: JSON.stringify(existingResult),
+                    xmoney_transaction_status:
+                      existingResult.transactionStatus || "",
+                    xmoney_external_order_id:
+                      existingResult.externalOrderId || "",
+                  },
+                },
+              };
+            }
+          }
+
+          // Clear previous result for card payments.
           window.xmoneyPaymentResult = null;
 
-          // Submit the payment form (don't await - the callback will set the result)
+          // Submit the payment form
           formInstanceRef.current.submit();
 
           // Wait for payment result from onPaymentComplete callback
@@ -260,13 +280,10 @@
               attempts++;
               if (window.xmoneyPaymentResult) {
                 clearInterval(checkResult);
-                // Check transactionStatus (xMoney SDK uses this field)
                 const txStatus =
                   window.xmoneyPaymentResult.transactionStatus ||
                   window.xmoneyPaymentResult.status ||
                   "";
-                console.log("Payment result:", window.xmoneyPaymentResult);
-                console.log("Transaction status:", txStatus);
 
                 // Check for success statuses (case-insensitive)
                 const successStatuses = [
@@ -279,10 +296,8 @@
                 );
 
                 if (isSuccess) {
-                  console.log("Payment successful!");
                   resolve(window.xmoneyPaymentResult);
                 } else {
-                  console.error("Payment failed with status:", txStatus);
                   reject(new Error("Payment was not completed: " + txStatus));
                 }
               } else if (attempts >= maxAttempts) {
@@ -379,6 +394,4 @@
       features: settings.supports || ["products"],
     },
   });
-
-  console.log("xMoney WooCommerce Blocks payment method registered");
 })();

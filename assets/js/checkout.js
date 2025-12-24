@@ -14,8 +14,6 @@
      * Initialize checkout.
      */
     init: function () {
-      console.log("xMoney Classic Checkout initializing...");
-
       // Wait for WooCommerce checkout form to be ready.
       $(document.body).on("updated_checkout", this.onCheckoutUpdate.bind(this));
       $(document.body).on(
@@ -59,7 +57,7 @@
           try {
             this.checkoutInstance.destroy();
           } catch (e) {
-            console.error("Error destroying checkout instance:", e);
+            // Ignore destroy errors
           }
           this.checkoutInstance = null;
         }
@@ -74,7 +72,6 @@
 
       // Check if container exists.
       if (!$("#xmoney-wc-payment-form").length) {
-        console.warn("xMoney payment form container not found");
         return;
       }
 
@@ -83,14 +80,13 @@
         try {
           this.checkoutInstance.destroy();
         } catch (e) {
-          console.error("Error destroying checkout instance:", e);
+          // Ignore destroy errors
         }
         this.checkoutInstance = null;
       }
 
       // Wait for SDK to load.
       if (typeof window.XMoneyPaymentForm === "undefined") {
-        console.log("Waiting for xMoney SDK...");
         var checkSDK = setInterval(function () {
           if (typeof window.XMoneyPaymentForm !== "undefined") {
             clearInterval(checkSDK);
@@ -124,15 +120,13 @@
           if (response.success && response.data) {
             self.createPaymentForm(response.data);
           } else {
-            console.error("Payment intent error:", response);
             self.showError(
               (response.data && response.data.message) ||
                 "Failed to initialize payment form."
             );
           }
         },
-        error: function (xhr, status, error) {
-          console.error("AJAX error:", { status: status, error: error });
+        error: function () {
           self.showError("Failed to initialize payment form.");
         },
       });
@@ -145,12 +139,10 @@
       var self = this;
 
       if (!$("#xmoney-wc-payment-form").length) {
-        console.error("Container not found");
         return;
       }
 
       if (typeof window.XMoneyPaymentForm === "undefined") {
-        console.error("SDK not loaded");
         return;
       }
 
@@ -161,12 +153,6 @@
       var enableGooglePay = xmoneyWc.enableGooglePay === true || xmoneyWc.enableGooglePay === "true";
       var enableApplePay = xmoneyWc.enableApplePay === true || xmoneyWc.enableApplePay === "true";
       var enableSavedCards = xmoneyWc.enableSavedCards === true || xmoneyWc.enableSavedCards === "true";
-
-      console.log("xMoney wallet settings:", {
-        googlePay: enableGooglePay,
-        applePay: enableApplePay,
-        savedCards: enableSavedCards,
-      });
 
       var options = {
         locale: xmoneyWc.locale || "en-US",
@@ -191,7 +177,6 @@
       };
 
       try {
-        console.log("Creating xMoney payment form...");
         this.checkoutInstance = new window.XMoneyPaymentForm({
           container: "xmoney-wc-payment-form",
           publicKey: paymentIntent.publicKey,
@@ -199,20 +184,16 @@
           orderChecksum: paymentIntent.checksum,
           options: options,
           onReady: function () {
-            console.log("xMoney payment form ready");
             $("#xmoney-wc-payment-form").addClass("xmoney-ready");
           },
-          onError: function (error) {
-            console.error("xMoney error:", error);
+          onError: function () {
             self.showError("Payment form error.");
           },
           onPaymentComplete: function (data) {
-            console.log("Payment complete:", data);
             self.handlePaymentComplete(data);
           },
         });
       } catch (error) {
-        console.error("Error creating payment form:", error);
         this.showError("Failed to create payment form.");
       }
     },
@@ -237,12 +218,33 @@
         success: function (response) {
           if (response.result === "success" && response.redirect) {
             // Extract order info from redirect URL.
-            var urlParams = new URLSearchParams(
-              response.redirect.split("?")[1]
-            );
-            var orderId =
-              urlParams.get("order_id") || urlParams.get("order-received");
-            var orderKey = urlParams.get("key");
+            var orderId = null;
+            var orderKey = null;
+
+            try {
+              var url = new URL(response.redirect, window.location.origin);
+              var urlParams = url.searchParams;
+
+              // Try different parameter names.
+              orderId = urlParams.get("order_id") || urlParams.get("order-received");
+              orderKey = urlParams.get("key");
+
+              // Also try to extract from path.
+              if (!orderId) {
+                var pathMatch = url.pathname.match(/order-received\/(\d+)/);
+                if (pathMatch) {
+                  orderId = pathMatch[1];
+                }
+              }
+            } catch (e) {
+              // Fallback to simple parsing.
+              var parts = response.redirect.split("?");
+              if (parts[1]) {
+                var params = new URLSearchParams(parts[1]);
+                orderId = params.get("order_id") || params.get("order-received");
+                orderKey = params.get("key");
+              }
+            }
 
             if (orderId) {
               self.processPaymentComplete(data, orderId, orderKey);
@@ -268,6 +270,9 @@
     processPaymentComplete: function (data, orderId, orderKey) {
       var self = this;
 
+      var transactionStatus = data.transactionStatus || data.status || "";
+      var xmoneyOrderId = data.externalOrderId || data.orderId || "";
+
       $.ajax({
         type: "POST",
         url: xmoneyWc.ajaxUrl,
@@ -276,8 +281,8 @@
           nonce: xmoneyWc.nonce,
           order_id: orderId,
           order_key: orderKey,
-          transaction_status: data.transactionStatus || data.status || "",
-          order_id_xmoney: data.externalOrderId || data.orderId || "",
+          transaction_status: transactionStatus,
+          order_id_xmoney: xmoneyOrderId,
         },
         dataType: "json",
         success: function (response) {

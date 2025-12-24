@@ -215,12 +215,21 @@ class XMoney_WC_Ajax
 		}
 
 		// Update order based on payment status.
-		// Valid success statuses: complete-ok, in-progress, open-ok.
+		// Valid success statuses: complete-ok, in-progress, open-ok (case-insensitive).
+		$status_lower = strtolower($status);
 		$success_statuses = array('complete-ok', 'in-progress', 'open-ok');
-		if (in_array($status, $success_statuses, true)) {
+		$is_success = in_array($status_lower, $success_statuses, true);
+
+		if ($is_success) {
 			// Payment successful.
 			$order->payment_complete();
-			$order->add_order_note(__('Payment completed via xMoney.', 'xmoney-woocommerce'));
+			$order->add_order_note(
+				sprintf(
+					/* translators: %s: Transaction status */
+					__('Payment completed via xMoney. Status: %s', 'xmoney-woocommerce'),
+					$status
+				)
+			);
 
 			// Store xMoney order ID if provided.
 			if ($order_id_xmoney) {
@@ -237,8 +246,12 @@ class XMoney_WC_Ajax
 				)
 			);
 		} else {
-			// Payment failed.
-			$order->update_status('failed', __('Payment failed via xMoney.', 'xmoney-woocommerce'));
+			// Payment failed or unknown status.
+			$order->update_status('failed', sprintf(
+				/* translators: %s: Transaction status */
+				__('Payment failed via xMoney. Status: %s', 'xmoney-woocommerce'),
+				$status
+			));
 
 			wp_send_json_error(
 				array(
