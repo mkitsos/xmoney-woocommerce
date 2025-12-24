@@ -43,17 +43,90 @@ class XMoney_WC_Helper {
 	/**
 	 * Get plugin configuration.
 	 *
-	 * @return array Configuration array with site_id, public_key, secret_key, and is_live.
+	 * @return array Configuration array with public_key, secret_key, and is_live.
 	 */
 	public static function get_configuration(): array {
-		$is_live = 'yes' === get_option( 'xmoney_wc_live_mode', 'no' );
+		$public_key = get_option( 'xmoney_wc_public_key', '' );
+		$secret_key = get_option( 'xmoney_wc_secret_key', '' );
+
+		// Auto-detect environment from public key prefix.
+		$is_live = self::is_live_mode( $public_key );
 
 		return array(
 			'is_live'    => $is_live,
-			'site_id'    => $is_live ? get_option( 'xmoney_wc_live_site_id', '' ) : get_option( 'xmoney_wc_test_site_id', '' ),
-			'public_key' => $is_live ? get_option( 'xmoney_wc_live_public_key', '' ) : get_option( 'xmoney_wc_test_public_key', '' ),
-			'secret_key' => $is_live ? get_option( 'xmoney_wc_live_secret_key', '' ) : get_option( 'xmoney_wc_test_secret_key', '' ),
+			'public_key' => $public_key,
+			'secret_key' => $secret_key,
 		);
+	}
+
+	/**
+	 * Validate public key format.
+	 *
+	 * @param string $public_key The public key to validate.
+	 * @return bool True if valid, false otherwise.
+	 */
+	public static function is_valid_public_key( string $public_key ): bool {
+		if ( empty( $public_key ) ) {
+			return false;
+		}
+
+		return strpos( $public_key, 'pk_live_' ) === 0 || strpos( $public_key, 'pk_test_' ) === 0;
+	}
+
+	/**
+	 * Validate secret key format.
+	 *
+	 * @param string $secret_key The secret key to validate.
+	 * @return bool True if valid, false otherwise.
+	 */
+	public static function is_valid_secret_key( string $secret_key ): bool {
+		if ( empty( $secret_key ) ) {
+			return false;
+		}
+
+		return strpos( $secret_key, 'sk_live_' ) === 0 || strpos( $secret_key, 'sk_test_' ) === 0;
+	}
+
+	/**
+	 * Detect if we're in live mode based on public key prefix.
+	 *
+	 * @param string $public_key The public key to check.
+	 * @return bool True if live mode, false if test mode.
+	 */
+	public static function is_live_mode( string $public_key ): bool {
+		if ( empty( $public_key ) ) {
+			return false;
+		}
+
+		// Check for live key prefix.
+		if ( strpos( $public_key, 'pk_live_' ) === 0 ) {
+			return true;
+		}
+
+		// Default to test mode (pk_test_ or any other prefix).
+		return false;
+	}
+
+	/**
+	 * Get environment label based on public key.
+	 *
+	 * @param string $public_key The public key to check.
+	 * @return string 'live', 'test', or 'unknown'.
+	 */
+	public static function get_environment( string $public_key ): string {
+		if ( empty( $public_key ) ) {
+			return 'unknown';
+		}
+
+		if ( strpos( $public_key, 'pk_live_' ) === 0 ) {
+			return 'live';
+		}
+
+		if ( strpos( $public_key, 'pk_test_' ) === 0 ) {
+			return 'test';
+		}
+
+		return 'unknown';
 	}
 
 	/**
