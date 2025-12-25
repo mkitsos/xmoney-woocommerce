@@ -38,7 +38,7 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 		$this->init_settings();
 
 		// Define user set variables.
-		$this->title              = $this->get_option('title', __('xMoney', 'xmoney-woocommerce'));
+		$this->title              = $this->get_option('title', __('xMoney (Credit/Debit Card)', 'xmoney-woocommerce'));
 		$this->description        = $this->get_option('description', __('Pay securely with your credit or debit card.', 'xmoney-woocommerce'));
 		$this->enabled            = $this->get_option('enabled', 'yes');
 		$this->enable_for_methods = $this->get_option('enable_for_methods', array());

@@ -183,6 +183,14 @@
           },
           onPaymentComplete: (result) => {
             window.xmoneyPaymentResult = result;
+            // Store error message if payment failed
+            if (result.errorMessage) {
+              window.xmoneyPaymentError = result.errorMessage;
+            } else if (result.error) {
+              window.xmoneyPaymentError = result.error;
+            } else if (result.message) {
+              window.xmoneyPaymentError = result.message;
+            }
           },
         });
       } catch (err) {
@@ -259,8 +267,9 @@
             }
           }
 
-          // Clear previous result for card payments.
+          // Clear previous result and error for card payments.
           window.xmoneyPaymentResult = null;
+          window.xmoneyPaymentError = null;
 
           // Submit the payment form
           formInstanceRef.current.submit();
@@ -292,7 +301,14 @@
                 if (isSuccess) {
                   resolve(window.xmoneyPaymentResult);
                 } else {
-                  reject(new Error("Payment was not completed: " + txStatus));
+                  // Use the actual error message from xMoney if available
+                  const errorMsg =
+                    window.xmoneyPaymentError ||
+                    window.xmoneyPaymentResult.errorMessage ||
+                    window.xmoneyPaymentResult.error ||
+                    window.xmoneyPaymentResult.message ||
+                    "Payment was declined. Please try again.";
+                  reject(new Error(errorMsg));
                 }
               } else if (attempts >= maxAttempts) {
                 clearInterval(checkResult);
@@ -312,6 +328,28 @@
             },
           };
         } catch (err) {
+          // Re-initialize form after failed payment so user can try again.
+          window.xmoneyPaymentResult = null;
+          window.xmoneyPaymentError = null;
+          setPaymentFormReady(false);
+
+          // Destroy current instance and re-init.
+          if (formInstanceRef.current) {
+            try {
+              formInstanceRef.current.destroy();
+            } catch (e) {
+              // Ignore destroy errors.
+            }
+            formInstanceRef.current = null;
+          }
+
+          // Re-initialize after a short delay.
+          setTimeout(() => {
+            if (mountedRef.current) {
+              initPaymentForm();
+            }
+          }, 500);
+
           return {
             type: emitResponse.responseTypes.ERROR,
             message: err.message || "Payment failed",
@@ -320,7 +358,12 @@
       });
 
       return unsubscribe;
-    }, [onPaymentSetup, paymentFormReady, emitResponse.responseTypes]);
+    }, [
+      onPaymentSetup,
+      paymentFormReady,
+      emitResponse.responseTypes,
+      initPaymentForm,
+    ]);
 
     // Render
     if (error) {

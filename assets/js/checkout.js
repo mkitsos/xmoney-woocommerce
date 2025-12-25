@@ -294,9 +294,13 @@
       if (!isSuccess) {
         this.isProcessing = false;
         this.setProcessing(false);
-        this.showError(
-          "Payment failed: " + (data.transactionStatus || "Unknown status")
-        );
+        // Use the actual error message from xMoney if available.
+        var errorMsg = data.errorMessage || data.error || data.message || 
+          "Payment was declined. Please try again.";
+        this.showError(errorMsg);
+        
+        // Re-initialize the form so user can try again.
+        this.reinitializeForm();
         return;
       }
 
@@ -355,15 +359,48 @@
     },
 
     /**
+     * Re-initialize the payment form after a failed payment.
+     */
+    reinitializeForm: function () {
+      var self = this;
+      
+      // Reset state.
+      this.checkoutInstance = null;
+      this.paymentFormReady = false;
+      this.isInitializing = false;
+      this.pendingPaymentResult = null;
+      
+      // Small delay before re-initializing.
+      setTimeout(function () {
+        self.initPaymentForm();
+      }, 500);
+    },
+
+    /**
      * Show error message.
      */
     showError: function (message) {
+      // Remove existing notices.
       $(".woocommerce-error, .woocommerce-message").remove();
-      $("form.checkout").prepend(
-        '<div class="woocommerce-error">' + message + "</div>"
+      
+      // Find the notices wrapper or create one.
+      var $noticesWrapper = $(".woocommerce-notices-wrapper").first();
+      if (!$noticesWrapper.length) {
+        $noticesWrapper = $('<div class="woocommerce-notices-wrapper"></div>');
+        $("form.checkout").before($noticesWrapper);
+      }
+      
+      // Add error in WooCommerce's standard format.
+      var $error = $(
+        '<ul class="woocommerce-error" role="alert">' +
+          "<li>" + message + "</li>" +
+        "</ul>"
       );
+      $noticesWrapper.html($error);
+      
+      // Scroll to notices.
       $("html, body").animate(
-        { scrollTop: $("form.checkout").offset().top - 100 },
+        { scrollTop: $noticesWrapper.offset().top - 100 },
         500
       );
     },
