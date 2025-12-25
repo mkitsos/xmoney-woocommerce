@@ -25,7 +25,7 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 		$this->icon               = XMONEY_WC_PLUGIN_URL . 'assets/logo.png';
 		$this->has_fields         = true;
 		$this->method_title       = __('xMoney', 'xmoney-woocommerce');
-		$this->method_description = __('Accept payments via xMoney Payment Form directly on your checkout page.', 'xmoney-woocommerce');
+		$this->method_description = __('Accept payments via credit / debit card and digital wallets (Google Pay, Apple Pay) directly on your checkout page.', 'xmoney-woocommerce');
 
 		// Supported features.
 		$this->supports = array(
@@ -516,6 +516,9 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 							<div class="xmoney-payment-method-info">
 								<h3><?php esc_html_e('Saved Cards', 'xmoney-woocommerce'); ?></h3>
 								<p><?php esc_html_e('Allow customers to save cards for faster checkout', 'xmoney-woocommerce'); ?></p>
+								<p class="xmoney-field-hint" style="margin-top: 4px; color: #666;">
+									<em><?php esc_html_e('Note: This feature is only available for logged-in customers.', 'xmoney-woocommerce'); ?></em>
+								</p>
 							</div>
 							<label class="xmoney-toggle">
 								<input type="checkbox" name="woocommerce_xmoney_wc_enable_saved_cards" value="yes" <?php checked($this->get_option('enable_saved_cards'), 'yes'); ?>>
@@ -1029,7 +1032,9 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 				'nonce'       => wp_create_nonce('xmoney_wc_nonce'),
 				'gatewayId'   => $this->id,
 				'locale'      => XMoney_WC_Helper::get_xmoney_locale(),
-				'enableSavedCards' => 'yes' === $this->get_option('enable_saved_cards', 'no'),
+				'isLoggedIn'  => is_user_logged_in(),
+				// Pass the raw setting - JS will combine with isLoggedIn.
+				'enableSavedCardsSetting' => 'yes' === $this->get_option('enable_saved_cards', 'no'),
 				'enableGooglePay'   => 'yes' === $this->get_option('enable_google_pay', 'yes'),
 				'enableApplePay'    => 'yes' === $this->get_option('enable_apple_pay', 'yes'),
 			)

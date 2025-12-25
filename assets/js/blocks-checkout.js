@@ -182,9 +182,13 @@
         const enableApplePay =
           settings.enableApplePay === true ||
           settings.enableApplePay === "true";
-        const enableSavedCards =
-          settings.enableSavedCards === true ||
-          settings.enableSavedCards === "true";
+        // Only enable saved cards for logged-in users
+        const isLoggedIn =
+          settings.isLoggedIn === true || settings.isLoggedIn === "true";
+        const savedCardsSetting =
+          settings.enableSavedCardsSetting === true ||
+          settings.enableSavedCardsSetting === "true";
+        const enableSavedCards = isLoggedIn && savedCardsSetting;
 
         // Create payment form
         const formInstance = new window.XMoneyPaymentForm({

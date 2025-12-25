@@ -100,7 +100,9 @@ final class XMoney_WC_Blocks_Support extends AbstractPaymentMethodType {
 			'nonce'             => wp_create_nonce( 'xmoney_wc_nonce' ),
 			'locale'            => XMoney_WC_Helper::get_xmoney_locale(),
 			'publicKey'         => $configuration['public_key'],
-			'enableSavedCards'  => 'yes' === $this->get_setting( 'enable_saved_cards', 'no' ),
+			'isLoggedIn'        => is_user_logged_in(),
+			// Pass the raw setting - JS will combine with isLoggedIn.
+			'enableSavedCardsSetting' => 'yes' === $this->get_setting( 'enable_saved_cards', 'no' ),
 			'enableGooglePay'   => 'yes' === $this->get_setting( 'enable_google_pay', 'yes' ),
 			'enableApplePay'    => 'yes' === $this->get_setting( 'enable_apple_pay', 'yes' ),
 		);
