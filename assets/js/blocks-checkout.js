@@ -435,9 +435,24 @@
       );
     }
 
+    // Check if test mode
+    const isTestMode = settings.isTestMode === true || settings.isTestMode === "true";
+    const testModeNotice = settings.testModeNotice || {};
+    const testModeTitle = testModeNotice.title || "";
+    const testModeText = testModeNotice.text || "";
+
     return createElement(
       "div",
       { className: "xmoney-wc-blocks-wrapper" },
+      // Test mode notice
+      isTestMode &&
+        createElement(
+          "div",
+          { className: "xmoney-wc-test-notice" },
+          createElement("strong", null, testModeTitle),
+          " ",
+          testModeText
+        ),
       description &&
         createElement("p", { style: { marginBottom: "16px" } }, description),
       createElement(

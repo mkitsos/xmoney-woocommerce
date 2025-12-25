@@ -93,13 +93,15 @@ final class XMoney_WC_Blocks_Support extends AbstractPaymentMethodType {
 		
 		return array(
 			'title'             => $this->get_setting( 'title', __( 'xMoney', 'xmoney-woocommerce' ) ),
-			'description'       => $this->get_setting( 'description', __( 'Pay securely with your credit or debit card.', 'xmoney-woocommerce' ) ),
+			'description'       => $this->get_setting( 'description', '' ),
 			'supports'          => array_filter( $this->gateway ? $this->gateway->supports : array(), array( $this->gateway, 'supports' ) ),
 			'icon'              => XMONEY_WC_PLUGIN_URL . 'assets/logo.png',
 			'ajaxUrl'           => admin_url( 'admin-ajax.php' ),
 			'nonce'             => wp_create_nonce( 'xmoney_wc_nonce' ),
 			'locale'            => XMoney_WC_Helper::get_xmoney_locale(),
 			'publicKey'         => $configuration['public_key'],
+			'isTestMode'        => ! $configuration['is_live'],
+			'testModeNotice'    => XMoney_WC_Helper::get_test_mode_notice(),
 			'isLoggedIn'        => is_user_logged_in(),
 			// Pass the raw setting - JS will combine with isLoggedIn.
 			'enableSavedCardsSetting' => 'yes' === $this->get_setting( 'enable_saved_cards', 'no' ),

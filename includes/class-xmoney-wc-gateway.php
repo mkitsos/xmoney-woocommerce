@@ -39,7 +39,7 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 
 		// Define user set variables.
 		$this->title              = $this->get_option('title', __('xMoney (Credit/Debit Card)', 'xmoney-woocommerce'));
-		$this->description        = $this->get_option('description', __('Pay securely with your credit or debit card.', 'xmoney-woocommerce'));
+		$this->description        = $this->get_option('description', '');
 		$this->enabled            = $this->get_option('enabled', 'yes');
 		$this->enable_for_methods = $this->get_option('enable_for_methods', array());
 		$this->enable_for_virtual = 'yes' === $this->get_option('enable_for_virtual', 'yes');
@@ -91,7 +91,7 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 				'title'       => __('Description', 'xmoney-woocommerce'),
 				'type'        => 'textarea',
 				'description' => __('This controls the description which the customer sees during checkout.', 'xmoney-woocommerce'),
-				'default'     => __('Pay securely with your credit or debit card.', 'xmoney-woocommerce'),
+				'default'     => '',
 				'desc_tip'    => true,
 			),
 			'public_key'             => array(
@@ -584,7 +584,7 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 
 					<div class="xmoney-field">
 						<label for="woocommerce_xmoney_wc_description"><?php esc_html_e('Description', 'xmoney-woocommerce'); ?></label>
-						<textarea id="woocommerce_xmoney_wc_description" name="woocommerce_xmoney_wc_description" rows="3" placeholder="Pay securely with your credit or debit card."><?php echo esc_textarea($this->get_option('description')); ?></textarea>
+						<textarea id="woocommerce_xmoney_wc_description" name="woocommerce_xmoney_wc_description" rows="3" placeholder="Optional description shown during checkout"><?php echo esc_textarea($this->get_option('description')); ?></textarea>
 						<p class="xmoney-field-hint"><?php esc_html_e('This is the description customers see during checkout.', 'xmoney-woocommerce'); ?></p>
 					</div>
 				</div>
@@ -900,6 +900,18 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 	 */
 	public function payment_fields()
 	{
+		// Show test mode notice if using test keys.
+		$configuration = XMoney_WC_Helper::get_configuration();
+		$is_test_mode = ! $configuration['is_live'];
+		
+		if ( $is_test_mode ) {
+			$notice = XMoney_WC_Helper::get_test_mode_notice();
+			echo '<div class="xmoney-wc-test-notice">';
+			echo '<strong>' . esc_html( $notice['title'] ) . '</strong> ';
+			echo esc_html( $notice['text'] );
+			echo '</div>';
+		}
+
 		if ($this->description) {
 			echo wp_kses_post(wpautop(wptexturize($this->description)));
 		}

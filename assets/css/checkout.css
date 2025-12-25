@@ -152,3 +152,22 @@ label[for="payment_method_xmoney_wc"] img {
 	margin-right: 8px;
 }
 
+/* Test mode notice */
+.xmoney-wc-test-notice {
+	padding: 16px 20px;
+	margin-bottom: 16px;
+	background: #f6f7f7;
+	border-left: 4px solid #dba617;
+	color: #1e1e1e;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.xmoney-wc-test-notice strong {
+	font-weight: 600;
+}
+
+.xmoney-wc-test-icon {
+	display: none;
+}
+

@@ -482,5 +482,17 @@ class XMoney_WC_Helper {
 			'backUrl'             => wc_get_checkout_url(),
 		);
 	}
+
+	/**
+	 * Get test mode notice text.
+	 *
+	 * @return array Array with 'title' and 'text' keys.
+	 */
+	public static function get_test_mode_notice(): array {
+		return array(
+			'title' => __( "Test mode.", 'xmoney-woocommerce' ),
+			'text'  => __( 'Payments will be simulated and no real charges will occur.', 'xmoney-woocommerce' ),
+		);
+	}
 }
 
