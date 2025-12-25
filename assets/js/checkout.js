@@ -6,20 +6,28 @@
 
   var XMoneyCheckout = {
     checkoutInstance: null,
-    currentOrderId: null,
-    currentOrderKey: null,
     isProcessing: false,
+    isInitializing: false,
+    paymentFormReady: false,
+    pendingPaymentResult: null,
 
     /**
      * Initialize checkout.
      */
     init: function () {
+      var self = this;
+
       // Wait for WooCommerce checkout form to be ready.
       $(document.body).on("updated_checkout", this.onCheckoutUpdate.bind(this));
       $(document.body).on(
         "payment_method_selected",
         this.onPaymentMethodSelected.bind(this)
       );
+
+      // Intercept checkout form submission.
+      $("form.checkout").on("checkout_place_order_xmoney_wc", function () {
+        return self.onPlaceOrder();
+      });
 
       // Initialize on page load if already on checkout.
       if ($("body").hasClass("woocommerce-checkout")) {
@@ -36,8 +44,8 @@
       var selectedMethod = $('input[name="payment_method"]:checked').val();
       if (
         selectedMethod === "xmoney_wc" &&
-        $("#xmoney-wc-payment-form").length &&
-        !this.checkoutInstance
+        !this.checkoutInstance &&
+        !this.isInitializing
       ) {
         this.initPaymentForm();
       }
@@ -49,10 +57,14 @@
     onPaymentMethodSelected: function () {
       var selectedMethod = $('input[name="payment_method"]:checked').val();
       if (selectedMethod === "xmoney_wc") {
-        if (!this.checkoutInstance) {
+        if (!this.checkoutInstance && !this.isInitializing) {
           this.initPaymentForm();
         }
       } else {
+        // Reset state when switching away from xMoney.
+        this.isInitializing = false;
+        this.paymentFormReady = false;
+        this.pendingPaymentResult = null;
         if (this.checkoutInstance) {
           try {
             this.checkoutInstance.destroy();
@@ -65,25 +77,66 @@
     },
 
     /**
+     * Handle Place Order button click.
+     */
+    onPlaceOrder: function () {
+      var self = this;
+
+      // Check if payment already completed (wallet payments or card payment).
+      if (this.pendingPaymentResult) {
+        // Payment already done, proceed with order creation.
+        this.isProcessing = false;
+        return true;
+      }
+
+      // Check if form is ready.
+      if (!this.paymentFormReady || !this.checkoutInstance) {
+        this.showError("Payment form is not ready. Please wait.");
+        return false;
+      }
+
+      // Prevent double processing.
+      if (this.isProcessing) {
+        return false;
+      }
+
+      this.isProcessing = true;
+      this.setProcessing(true);
+
+      // Submit the xMoney payment form.
+      try {
+        this.checkoutInstance.submit();
+      } catch (e) {
+        this.isProcessing = false;
+        this.setProcessing(false);
+        this.showError("Failed to submit payment.");
+        return false;
+      }
+
+      // Wait for payment result (onPaymentComplete will be called).
+      // Return false to prevent WooCommerce from submitting immediately.
+      return false;
+    },
+
+    /**
      * Initialize payment form.
      */
     initPaymentForm: function () {
       var self = this;
+
+      // Prevent multiple initializations.
+      if (this.isInitializing || this.checkoutInstance) {
+        return;
+      }
 
       // Check if container exists.
       if (!$("#xmoney-wc-payment-form").length) {
         return;
       }
 
-      // Destroy existing instance.
-      if (this.checkoutInstance) {
-        try {
-          this.checkoutInstance.destroy();
-        } catch (e) {
-          // Ignore destroy errors
-        }
-        this.checkoutInstance = null;
-      }
+      this.isInitializing = true;
+      this.paymentFormReady = false;
+      this.pendingPaymentResult = null;
 
       // Wait for SDK to load.
       if (typeof window.XMoneyPaymentForm === "undefined") {
@@ -95,6 +148,7 @@
         }, 100);
         setTimeout(function () {
           clearInterval(checkSDK);
+          self.isInitializing = false;
         }, 10000);
         return;
       }
@@ -120,6 +174,7 @@
           if (response.success && response.data) {
             self.createPaymentForm(response.data);
           } else {
+            self.isInitializing = false;
             self.showError(
               (response.data && response.data.message) ||
                 "Failed to initialize payment form."
@@ -127,6 +182,7 @@
           }
         },
         error: function () {
+          self.isInitializing = false;
           self.showError("Failed to initialize payment form.");
         },
       });
@@ -137,176 +193,161 @@
      */
     createPaymentForm: function (paymentIntent) {
       var self = this;
+      var containerId = "xmoney-wc-payment-form";
 
-      if (!$("#xmoney-wc-payment-form").length) {
-        return;
-      }
-
+      // Verify SDK is available.
       if (typeof window.XMoneyPaymentForm === "undefined") {
+        this.isInitializing = false;
+        this.showError("Payment SDK not loaded.");
         return;
       }
 
-      // Clear container.
-      $("#xmoney-wc-payment-form").empty().removeClass("xmoney-ready");
+      // Wait for container to be in DOM.
+      var waitForContainer = function () {
+        var container = document.getElementById(containerId);
+        if (!container) {
+          self.isInitializing = false;
+          self.showError("Payment form container not found.");
+          return;
+        }
 
-      // Build options with wallet settings.
-      var enableGooglePay = xmoneyWc.enableGooglePay === true || xmoneyWc.enableGooglePay === "true";
-      var enableApplePay = xmoneyWc.enableApplePay === true || xmoneyWc.enableApplePay === "true";
-      var enableSavedCards = xmoneyWc.enableSavedCards === true || xmoneyWc.enableSavedCards === "true";
+        // Clear the container completely.
+        container.innerHTML = "";
 
-      var options = {
-        locale: xmoneyWc.locale || "en-US",
-        buttonType: "pay",
-        displaySubmitButton: true,
-        displaySaveCardOption: enableSavedCards,
-        enableSavedCards: enableSavedCards,
-        validationMode: "onBlur",
-        googlePay: {
-          enabled: enableGooglePay,
-        },
-        applePay: {
-          enabled: enableApplePay,
-        },
-        appearance: {
-          theme: "light",
-          variables: {
-            colorPrimary: "#2271b1",
-            borderRadius: "4px",
-          },
-        },
-      };
+        // Parse wallet settings from plugin.
+        var enableGooglePay =
+          xmoneyWc.enableGooglePay === true ||
+          xmoneyWc.enableGooglePay === "true";
+        var enableApplePay =
+          xmoneyWc.enableApplePay === true ||
+          xmoneyWc.enableApplePay === "true";
+        var enableSavedCards =
+          xmoneyWc.enableSavedCards === true ||
+          xmoneyWc.enableSavedCards === "true";
 
-      try {
-        this.checkoutInstance = new window.XMoneyPaymentForm({
-          container: "xmoney-wc-payment-form",
+        var sdkConfig = {
+          container: containerId,
           publicKey: paymentIntent.publicKey,
           orderPayload: paymentIntent.payload,
           orderChecksum: paymentIntent.checksum,
-          options: options,
+          options: {
+            locale: xmoneyWc.locale || "en-US",
+            buttonType: "pay",
+            displaySubmitButton: false,
+            displaySaveCardOption: enableSavedCards,
+            enableSavedCards: enableSavedCards,
+            validationMode: "onBlur",
+            googlePay: {
+              enabled: enableGooglePay,
+            },
+            applePay: {
+              enabled: enableApplePay,
+            },
+            appearance: {
+              theme: "light",
+              variables: {
+                colorPrimary: "#2271b1",
+                borderRadius: "4px",
+              },
+            },
+          },
           onReady: function () {
+            self.isInitializing = false;
+            self.paymentFormReady = true;
             $("#xmoney-wc-payment-form").addClass("xmoney-ready");
           },
-          onError: function () {
-            self.showError("Payment form error.");
+          onError: function (err) {
+            self.isInitializing = false;
+            self.paymentFormReady = false;
+            self.isProcessing = false;
+            self.setProcessing(false);
+            self.checkoutInstance = null;
+            self.showError(
+              "Payment form error: " +
+                (err && err.message ? err.message : "Unknown error")
+            );
           },
           onPaymentComplete: function (data) {
             self.handlePaymentComplete(data);
           },
-        });
-      } catch (error) {
-        this.showError("Failed to create payment form.");
-      }
+        };
+
+        try {
+          self.checkoutInstance = new window.XMoneyPaymentForm(sdkConfig);
+        } catch (error) {
+          self.isInitializing = false;
+          self.showError("Failed to create payment form.");
+        }
+      };
+
+      // Small delay to ensure DOM is ready.
+      setTimeout(waitForContainer, 100);
     },
 
     /**
-     * Handle payment completion.
+     * Handle payment completion from xMoney SDK.
      */
     handlePaymentComplete: function (data) {
-      var self = this;
+      // Check transaction status.
+      var txStatus = (
+        data.transactionStatus ||
+        data.status ||
+        ""
+      ).toLowerCase();
+      var successStatuses = ["complete-ok", "in-progress", "open-ok"];
+      var isSuccess = successStatuses.indexOf(txStatus) !== -1;
 
-      if (this.isProcessing) return;
-      this.setProcessing(true);
+      if (!isSuccess) {
+        this.isProcessing = false;
+        this.setProcessing(false);
+        this.showError(
+          "Payment failed: " + (data.transactionStatus || "Unknown status")
+        );
+        return;
+      }
 
-      // Create WooCommerce order first.
+      // Store the payment result.
+      this.pendingPaymentResult = data;
+
+      // Add hidden fields to the form with payment data.
       var $form = $("form.checkout");
+      $form.find('input[name="xmoney_payment_result"]').remove();
+      $form.find('input[name="xmoney_transaction_status"]').remove();
+      $form.find('input[name="xmoney_external_order_id"]').remove();
 
-      $.ajax({
-        type: "POST",
-        url: wc_checkout_params.checkout_url,
-        data: $form.serialize(),
-        dataType: "json",
-        success: function (response) {
-          if (response.result === "success" && response.redirect) {
-            // Extract order info from redirect URL.
-            var orderId = null;
-            var orderKey = null;
+      $form.append(
+        $('<input type="hidden" name="xmoney_payment_result" />').val(
+          JSON.stringify(data)
+        )
+      );
+      $form.append(
+        $('<input type="hidden" name="xmoney_transaction_status" />').val(
+          data.transactionStatus || ""
+        )
+      );
+      $form.append(
+        $('<input type="hidden" name="xmoney_external_order_id" />').val(
+          data.externalOrderId || ""
+        )
+      );
 
-            try {
-              var url = new URL(response.redirect, window.location.origin);
-              var urlParams = url.searchParams;
+      // Reset processing state before re-submitting.
+      this.isProcessing = false;
 
-              // Try different parameter names.
-              orderId = urlParams.get("order_id") || urlParams.get("order-received");
-              orderKey = urlParams.get("key");
+      // Remove the processing block to allow WooCommerce to handle the form.
+      $form.removeClass("processing");
+      if (typeof $form.unblock === "function") {
+        $form.unblock();
+      }
 
-              // Also try to extract from path.
-              if (!orderId) {
-                var pathMatch = url.pathname.match(/order-received\/(\d+)/);
-                if (pathMatch) {
-                  orderId = pathMatch[1];
-                }
-              }
-            } catch (e) {
-              // Fallback to simple parsing.
-              var parts = response.redirect.split("?");
-              if (parts[1]) {
-                var params = new URLSearchParams(parts[1]);
-                orderId = params.get("order_id") || params.get("order-received");
-                orderKey = params.get("key");
-              }
-            }
-
-            if (orderId) {
-              self.processPaymentComplete(data, orderId, orderKey);
-            } else {
-              // Just redirect to thank you page.
-              window.location.href = response.redirect;
-            }
-          } else {
-            self.showError(response.messages || "Failed to create order.");
-            self.setProcessing(false);
-          }
-        },
-        error: function () {
-          self.showError("Failed to create order.");
-          self.setProcessing(false);
-        },
-      });
-    },
-
-    /**
-     * Process payment completion.
-     */
-    processPaymentComplete: function (data, orderId, orderKey) {
-      var self = this;
-
-      var transactionStatus = data.transactionStatus || data.status || "";
-      var xmoneyOrderId = data.externalOrderId || data.orderId || "";
-
-      $.ajax({
-        type: "POST",
-        url: xmoneyWc.ajaxUrl,
-        data: {
-          action: "xmoney_wc_handle_payment_complete",
-          nonce: xmoneyWc.nonce,
-          order_id: orderId,
-          order_key: orderKey,
-          transaction_status: transactionStatus,
-          order_id_xmoney: xmoneyOrderId,
-        },
-        dataType: "json",
-        success: function (response) {
-          if (response.success && response.data && response.data.redirect) {
-            window.location.href = response.data.redirect;
-          } else {
-            self.showError(
-              (response.data && response.data.message) || "Payment failed."
-            );
-            self.setProcessing(false);
-          }
-        },
-        error: function () {
-          self.showError("Failed to process payment.");
-          self.setProcessing(false);
-        },
-      });
+      // Now submit the WooCommerce checkout form.
+      $form.submit();
     },
 
     /**
      * Set processing state.
      */
     setProcessing: function (isProcessing) {
-      this.isProcessing = isProcessing;
       var $form = $("form.checkout");
 
       if (isProcessing) {

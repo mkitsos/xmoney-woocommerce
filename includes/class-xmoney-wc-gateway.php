@@ -511,11 +511,11 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 		$payment_result_json = isset($_POST['xmoney_payment_result']) ? sanitize_text_field(wp_unslash($_POST['xmoney_payment_result'])) : '';
 		
 		if (!empty($payment_result_json)) {
-			// Blocks checkout - payment already completed.
+			// Payment already completed (from Blocks or Classic checkout).
 			$payment_result = json_decode($payment_result_json, true);
 			
 			if ($payment_result) {
-				$tx_status = $payment_result['transactionStatus'] ?? '';
+				$tx_status = strtolower($payment_result['transactionStatus'] ?? '');
 				$success_statuses = array('complete-ok', 'in-progress', 'open-ok');
 				
 				if (in_array($tx_status, $success_statuses, true)) {
