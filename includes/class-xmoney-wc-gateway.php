@@ -73,6 +73,7 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 		}
 
 		$this->form_fields = array(
+			// Settings tab fields
 			'enabled'                => array(
 				'title'   => __('Enable/Disable', 'xmoney-woocommerce'),
 				'type'    => 'checkbox',
@@ -142,6 +143,53 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 				'label'   => __('Accept xMoney if the order is virtual', 'xmoney-woocommerce'),
 				'type'    => 'checkbox',
 				'default' => 'yes',
+			),
+			// Appearance tab fields
+			'theme_mode'             => array(
+				'title'       => __('Theme', 'xmoney-woocommerce'),
+				'type'        => 'select',
+				'description' => __('Select the payment form theme.', 'xmoney-woocommerce'),
+				'default'     => 'light',
+				'options'     => array(
+					'light'  => __('Light', 'xmoney-woocommerce'),
+					'dark'   => __('Dark', 'xmoney-woocommerce'),
+					'custom' => __('Custom', 'xmoney-woocommerce'),
+				),
+			),
+			'color_primary'          => array(
+				'title'       => __('Primary Color', 'xmoney-woocommerce'),
+				'type'        => 'text',
+				'description' => __('Main accent color for buttons and highlights.', 'xmoney-woocommerce'),
+				'default'     => '',
+				'class'       => 'xmoney-color-picker',
+			),
+			'color_background'       => array(
+				'title'       => __('Background Color', 'xmoney-woocommerce'),
+				'type'        => 'text',
+				'description' => __('Form background color.', 'xmoney-woocommerce'),
+				'default'     => '',
+				'class'       => 'xmoney-color-picker',
+			),
+			'color_text'             => array(
+				'title'       => __('Text Color', 'xmoney-woocommerce'),
+				'type'        => 'text',
+				'description' => __('Primary text color.', 'xmoney-woocommerce'),
+				'default'     => '',
+				'class'       => 'xmoney-color-picker',
+			),
+			'color_border'           => array(
+				'title'       => __('Border Color', 'xmoney-woocommerce'),
+				'type'        => 'text',
+				'description' => __('Input border color.', 'xmoney-woocommerce'),
+				'default'     => '',
+				'class'       => 'xmoney-color-picker',
+			),
+			'border_radius'          => array(
+				'title'       => __('Border Radius', 'xmoney-woocommerce'),
+				'type'        => 'text',
+				'description' => __('Corner roundness (e.g., 4px, 8px).', 'xmoney-woocommerce'),
+				'default'     => '',
+				'placeholder' => '4px',
 			),
 		);
 	}
@@ -263,7 +311,30 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 				</div>
 			</div>
 
+			<!-- Tabs Navigation -->
+			<div class="xmoney-tabs">
+				<button type="button" class="xmoney-tab active" data-tab="settings">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2"/>
+						<path d="M19.4 15C19.1 15.6 19.1 16.3 19.5 16.8L19.6 16.9C19.9 17.2 20.1 17.6 20.1 18.1C20.1 18.6 19.9 19 19.6 19.3C19.3 19.6 18.9 19.8 18.4 19.8C17.9 19.8 17.5 19.6 17.2 19.3L17.1 19.2C16.6 18.8 15.9 18.6 15.2 18.8C14.5 19 14 19.5 13.9 20.2V20.5C13.9 21.6 13 22.5 11.9 22.5C10.8 22.5 9.9 21.6 9.9 20.5V20.3C9.8 19.6 9.3 19 8.5 18.8C7.8 18.6 7.1 18.8 6.6 19.2L6.5 19.3C6.2 19.6 5.8 19.8 5.3 19.8C4.8 19.8 4.4 19.6 4.1 19.3C3.8 19 3.6 18.6 3.6 18.1C3.6 17.6 3.8 17.2 4.1 16.9L4.2 16.8C4.6 16.3 4.8 15.6 4.6 14.9C4.4 14.2 3.9 13.7 3.2 13.6H3C1.9 13.6 1 12.7 1 11.6C1 10.5 1.9 9.6 3 9.6H3.2C3.9 9.5 4.5 9 4.7 8.2C4.9 7.5 4.7 6.8 4.3 6.3L4.2 6.2C3.9 5.9 3.7 5.5 3.7 5C3.7 4.5 3.9 4.1 4.2 3.8C4.5 3.5 4.9 3.3 5.4 3.3C5.9 3.3 6.3 3.5 6.6 3.8L6.7 3.9C7.2 4.3 7.9 4.5 8.6 4.3H8.7C9.4 4.1 9.9 3.6 10 2.9V2.5C10 1.4 10.9 0.5 12 0.5C13.1 0.5 14 1.4 14 2.5V2.7C14.1 3.4 14.6 4 15.4 4.2C16.1 4.4 16.8 4.2 17.3 3.8L17.4 3.7C17.7 3.4 18.1 3.2 18.6 3.2C19.1 3.2 19.5 3.4 19.8 3.7C20.1 4 20.3 4.4 20.3 4.9C20.3 5.4 20.1 5.8 19.8 6.1L19.7 6.2C19.3 6.7 19.1 7.4 19.3 8.1V8.2C19.5 8.9 20 9.4 20.7 9.5H21C22.1 9.5 23 10.4 23 11.5C23 12.6 22.1 13.5 21 13.5H20.8C20.1 13.6 19.5 14.1 19.4 15Z" stroke="currentColor" stroke-width="2"/>
+					</svg>
+					<?php esc_html_e('Settings', 'xmoney-woocommerce'); ?>
+				</button>
+				<button type="button" class="xmoney-tab" data-tab="appearance">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C12.9 22 13.6 21.3 13.6 20.4C13.6 20 13.4 19.6 13.2 19.4C13 19.1 12.8 18.8 12.8 18.4C12.8 17.5 13.5 16.8 14.4 16.8H16C19.3 16.8 22 14.1 22 10.8C22 5.9 17.5 2 12 2Z" stroke="currentColor" stroke-width="2"/>
+						<circle cx="7.5" cy="11.5" r="1.5" fill="currentColor"/>
+						<circle cx="10.5" cy="7.5" r="1.5" fill="currentColor"/>
+						<circle cx="14.5" cy="7.5" r="1.5" fill="currentColor"/>
+						<circle cx="17.5" cy="11.5" r="1.5" fill="currentColor"/>
+					</svg>
+					<?php esc_html_e('Appearance', 'xmoney-woocommerce'); ?>
+				</button>
+			</div>
+
 			<div class="xmoney-admin-content">
+				<!-- Settings Tab -->
+				<div class="xmoney-tab-content active" data-tab="settings">
 				<!-- Enable Gateway -->
 				<div class="xmoney-card xmoney-card-primary">
 					<div class="xmoney-card-header">
@@ -432,9 +503,190 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 						<p class="xmoney-field-hint"><?php esc_html_e('This is the description customers see during checkout.', 'xmoney-woocommerce'); ?></p>
 					</div>
 				</div>
+				</div><!-- End Settings Tab -->
+
+				<!-- Appearance Tab -->
+				<div class="xmoney-tab-content" data-tab="appearance">
+					<?php
+					// Try to detect theme colors
+					$theme_primary = $this->get_theme_primary_color();
+					$current_primary = $this->get_option('color_primary', '');
+					$current_background = $this->get_option('color_background', '');
+					$current_text = $this->get_option('color_text', '');
+					$current_border = $this->get_option('color_border', '');
+					$current_radius = $this->get_option('border_radius', '');
+					$current_theme = $this->get_option('theme_mode', 'light');
+					?>
+					
+					<div class="xmoney-card">
+						<h2 class="xmoney-section-title">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C12.9 22 13.6 21.3 13.6 20.4C13.6 20 13.4 19.6 13.2 19.4C13 19.1 12.8 18.8 12.8 18.4C12.8 17.5 13.5 16.8 14.4 16.8H16C19.3 16.8 22 14.1 22 10.8C22 5.9 17.5 2 12 2Z" stroke="currentColor" stroke-width="2"/>
+								<circle cx="7.5" cy="11.5" r="1.5" fill="currentColor"/>
+								<circle cx="10.5" cy="7.5" r="1.5" fill="currentColor"/>
+								<circle cx="14.5" cy="7.5" r="1.5" fill="currentColor"/>
+								<circle cx="17.5" cy="11.5" r="1.5" fill="currentColor"/>
+							</svg>
+							<?php esc_html_e('Theme', 'xmoney-woocommerce'); ?>
+						</h2>
+						<p class="xmoney-section-description">
+							<?php esc_html_e('Choose a base theme for the payment form.', 'xmoney-woocommerce'); ?>
+						</p>
+
+						<div class="xmoney-theme-selector">
+							<label class="xmoney-theme-option <?php echo 'light' === $current_theme ? 'active' : ''; ?>">
+								<input type="radio" name="woocommerce_xmoney_wc_theme_mode" value="light" <?php checked($current_theme, 'light'); ?>>
+								<div class="xmoney-theme-preview xmoney-theme-light">
+									<div class="xmoney-theme-card"></div>
+								</div>
+								<span><?php esc_html_e('Light', 'xmoney-woocommerce'); ?></span>
+							</label>
+							<label class="xmoney-theme-option <?php echo 'dark' === $current_theme ? 'active' : ''; ?>">
+								<input type="radio" name="woocommerce_xmoney_wc_theme_mode" value="dark" <?php checked($current_theme, 'dark'); ?>>
+								<div class="xmoney-theme-preview xmoney-theme-dark">
+									<div class="xmoney-theme-card"></div>
+								</div>
+								<span><?php esc_html_e('Dark', 'xmoney-woocommerce'); ?></span>
+							</label>
+							<label class="xmoney-theme-option <?php echo 'custom' === $current_theme ? 'active' : ''; ?>">
+								<input type="radio" name="woocommerce_xmoney_wc_theme_mode" value="custom" <?php checked($current_theme, 'custom'); ?>>
+								<div class="xmoney-theme-preview xmoney-theme-custom">
+									<div class="xmoney-theme-card"></div>
+								</div>
+								<span><?php esc_html_e('Custom', 'xmoney-woocommerce'); ?></span>
+							</label>
+						</div>
+					</div>
+
+					<div class="xmoney-card xmoney-custom-colors" style="<?php echo 'custom' !== $current_theme ? 'display:none;' : ''; ?>">
+						<h2 class="xmoney-section-title">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+								<path d="M3 9H21" stroke="currentColor" stroke-width="2"/>
+								<circle cx="7" cy="6" r="1" fill="currentColor"/>
+								<circle cx="10" cy="6" r="1" fill="currentColor"/>
+								<circle cx="13" cy="6" r="1" fill="currentColor"/>
+							</svg>
+							<?php esc_html_e('Custom Colors', 'xmoney-woocommerce'); ?>
+						</h2>
+						<p class="xmoney-section-description">
+							<?php esc_html_e('Customize the payment form to match your brand. Leave empty to use defaults.', 'xmoney-woocommerce'); ?>
+							<?php if ($theme_primary) : ?>
+								<br><em><?php printf(esc_html__('Detected theme color: %s', 'xmoney-woocommerce'), '<code>' . esc_html($theme_primary) . '</code>'); ?></em>
+							<?php endif; ?>
+						</p>
+
+						<div class="xmoney-color-fields">
+							<div class="xmoney-color-field">
+								<label for="woocommerce_xmoney_wc_color_primary">
+									<?php esc_html_e('Primary Color', 'xmoney-woocommerce'); ?>
+								</label>
+								<div class="xmoney-color-input-wrap">
+									<input type="color" id="xmoney_color_primary_picker" value="<?php echo esc_attr($current_primary ?: ($theme_primary ?: '#7c3aed')); ?>" class="xmoney-color-picker-input">
+									<input type="text" id="woocommerce_xmoney_wc_color_primary" name="woocommerce_xmoney_wc_color_primary" value="<?php echo esc_attr($current_primary); ?>" placeholder="<?php echo esc_attr($theme_primary ?: '#7c3aed'); ?>" class="xmoney-color-text">
+								</div>
+								<p class="xmoney-field-hint"><?php esc_html_e('Buttons and accent color', 'xmoney-woocommerce'); ?></p>
+							</div>
+
+							<div class="xmoney-color-field">
+								<label for="woocommerce_xmoney_wc_color_background">
+									<?php esc_html_e('Background Color', 'xmoney-woocommerce'); ?>
+								</label>
+								<div class="xmoney-color-input-wrap">
+									<input type="color" id="xmoney_color_background_picker" value="<?php echo esc_attr($current_background ?: '#ffffff'); ?>" class="xmoney-color-picker-input">
+									<input type="text" id="woocommerce_xmoney_wc_color_background" name="woocommerce_xmoney_wc_color_background" value="<?php echo esc_attr($current_background); ?>" placeholder="#ffffff" class="xmoney-color-text">
+								</div>
+								<p class="xmoney-field-hint"><?php esc_html_e('Form background color', 'xmoney-woocommerce'); ?></p>
+							</div>
+
+							<div class="xmoney-color-field">
+								<label for="woocommerce_xmoney_wc_color_text">
+									<?php esc_html_e('Text Color', 'xmoney-woocommerce'); ?>
+								</label>
+								<div class="xmoney-color-input-wrap">
+									<input type="color" id="xmoney_color_text_picker" value="<?php echo esc_attr($current_text ?: '#1e1e1e'); ?>" class="xmoney-color-picker-input">
+									<input type="text" id="woocommerce_xmoney_wc_color_text" name="woocommerce_xmoney_wc_color_text" value="<?php echo esc_attr($current_text); ?>" placeholder="#1e1e1e" class="xmoney-color-text">
+								</div>
+								<p class="xmoney-field-hint"><?php esc_html_e('Primary text color', 'xmoney-woocommerce'); ?></p>
+							</div>
+
+							<div class="xmoney-color-field">
+								<label for="woocommerce_xmoney_wc_color_border">
+									<?php esc_html_e('Border Color', 'xmoney-woocommerce'); ?>
+								</label>
+								<div class="xmoney-color-input-wrap">
+									<input type="color" id="xmoney_color_border_picker" value="<?php echo esc_attr($current_border ?: '#e0e0e0'); ?>" class="xmoney-color-picker-input">
+									<input type="text" id="woocommerce_xmoney_wc_color_border" name="woocommerce_xmoney_wc_color_border" value="<?php echo esc_attr($current_border); ?>" placeholder="#e0e0e0" class="xmoney-color-text">
+								</div>
+								<p class="xmoney-field-hint"><?php esc_html_e('Input border color', 'xmoney-woocommerce'); ?></p>
+							</div>
+
+							<div class="xmoney-color-field xmoney-radius-field">
+								<label for="woocommerce_xmoney_wc_border_radius">
+									<?php esc_html_e('Border Radius', 'xmoney-woocommerce'); ?>
+								</label>
+								<input type="text" id="woocommerce_xmoney_wc_border_radius" name="woocommerce_xmoney_wc_border_radius" value="<?php echo esc_attr($current_radius); ?>" placeholder="4px">
+								<p class="xmoney-field-hint"><?php esc_html_e('Corner roundness (e.g., 4px, 8px, 12px)', 'xmoney-woocommerce'); ?></p>
+							</div>
+						</div>
+
+						<?php if ($theme_primary) : ?>
+						<button type="button" class="xmoney-btn xmoney-btn-secondary xmoney-use-theme-colors">
+							<?php esc_html_e('Use Theme Colors', 'xmoney-woocommerce'); ?>
+						</button>
+						<?php endif; ?>
+					</div>
+				</div><!-- End Appearance Tab -->
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Get primary color from WordPress theme.
+	 *
+	 * @return string|null Primary color hex code or null.
+	 */
+	private function get_theme_primary_color() {
+		// Try to get from theme mods (Customizer settings)
+		$theme_mods = get_theme_mods();
+		
+		// Common theme mod keys for primary/accent color
+		$color_keys = array(
+			'primary_color',
+			'accent_color',
+			'link_color',
+			'main_color',
+			'theme_color',
+			'brand_color',
+			'storefront_accent_color', // Storefront theme
+			'theme_accent_color',
+		);
+		
+		foreach ($color_keys as $key) {
+			if (! empty($theme_mods[$key])) {
+				return $theme_mods[$key];
+			}
+		}
+		
+		// Try global styles (block themes)
+		if (function_exists('wp_get_global_styles')) {
+			$global_styles = wp_get_global_styles();
+			if (! empty($global_styles['color']['background'])) {
+				// Get from palette
+			}
+			if (! empty($global_styles['elements']['link']['color']['text'])) {
+				return $global_styles['elements']['link']['color']['text'];
+			}
+		}
+		
+		// Try to get WooCommerce primary color
+		$wc_primary = get_option('woocommerce_email_base_color', '');
+		if ($wc_primary) {
+			return $wc_primary;
+		}
+		
+		return null;
 	}
 
 	/**

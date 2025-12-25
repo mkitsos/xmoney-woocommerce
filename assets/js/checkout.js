@@ -243,13 +243,7 @@
             applePay: {
               enabled: enableApplePay,
             },
-            appearance: {
-              theme: "light",
-              variables: {
-                colorPrimary: "#2271b1",
-                borderRadius: "4px",
-              },
-            },
+            appearance: paymentIntent.appearance || { theme: "light" },
           },
           onReady: function () {
             self.isInitializing = false;

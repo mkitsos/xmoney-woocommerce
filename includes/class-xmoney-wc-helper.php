@@ -218,6 +218,53 @@ class XMoney_WC_Helper {
 	}
 
 	/**
+	 * Get appearance configuration for the payment form.
+	 *
+	 * @return array Appearance configuration.
+	 */
+	public static function get_appearance_config(): array {
+		$gateway_settings = get_option( 'woocommerce_xmoney_wc_settings', array() );
+		
+		$theme_mode = $gateway_settings['theme_mode'] ?? 'light';
+		
+		// If not custom mode, return just the theme
+		if ( 'custom' !== $theme_mode ) {
+			return array(
+				'theme' => $theme_mode,
+			);
+		}
+		
+		// Build custom variables
+		$variables = array();
+		
+		$color_map = array(
+			'color_primary'    => 'colorPrimary',
+			'color_background' => 'colorBackground',
+			'color_text'       => 'colorText',
+			'color_border'     => 'colorBorder',
+			'border_radius'    => 'borderRadius',
+		);
+		
+		foreach ( $color_map as $setting_key => $sdk_key ) {
+			$value = $gateway_settings[ $setting_key ] ?? '';
+			if ( ! empty( $value ) ) {
+				$variables[ $sdk_key ] = $value;
+			}
+		}
+		
+		if ( empty( $variables ) ) {
+			return array(
+				'theme' => 'light',
+			);
+		}
+		
+		return array(
+			'theme'     => 'custom',
+			'variables' => $variables,
+		);
+	}
+
+	/**
 	 * Format phone number.
 	 *
 	 * @param string $phone Phone number.

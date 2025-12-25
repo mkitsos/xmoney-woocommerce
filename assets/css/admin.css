@@ -434,6 +434,240 @@
 	color: #d93025;
 }
 
+/* Main Tabs Navigation */
+.xmoney-tabs {
+	display: flex;
+	gap: 0;
+	margin-bottom: 24px;
+	background: #fff;
+	border-radius: 8px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+	overflow: hidden;
+}
+
+.xmoney-tabs .xmoney-tab {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 16px 24px;
+	background: #fff;
+	border: none;
+	border-bottom: 3px solid transparent;
+	font-size: 14px;
+	font-weight: 500;
+	color: #757575;
+	cursor: pointer;
+	transition: all 0.2s;
+	margin-bottom: 0;
+}
+
+.xmoney-tabs .xmoney-tab:hover {
+	background: #f9f9f9;
+	color: #1e1e1e;
+}
+
+.xmoney-tabs .xmoney-tab.active {
+	color: #7c3aed;
+	border-bottom-color: #7c3aed;
+	background: #faf5ff;
+}
+
+.xmoney-tabs .xmoney-tab svg {
+	flex-shrink: 0;
+}
+
+/* Theme Selector */
+.xmoney-theme-selector {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 16px;
+	margin-top: 16px;
+}
+
+.xmoney-theme-option {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	padding: 16px;
+	background: #f9f9f9;
+	border: 2px solid transparent;
+	border-radius: 12px;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.xmoney-theme-option:hover {
+	background: #f5f5f5;
+}
+
+.xmoney-theme-option.active {
+	border-color: #7c3aed;
+	background: #faf5ff;
+}
+
+.xmoney-theme-option input[type="radio"] {
+	display: none;
+}
+
+.xmoney-theme-option span {
+	font-size: 14px;
+	font-weight: 500;
+	color: #1e1e1e;
+}
+
+.xmoney-theme-preview {
+	width: 100%;
+	height: 80px;
+	border-radius: 8px;
+	padding: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.xmoney-theme-light {
+	background: #f5f5f5;
+	border: 1px solid #e0e0e0;
+}
+
+.xmoney-theme-light .xmoney-theme-card {
+	width: 80%;
+	height: 100%;
+	background: #fff;
+	border-radius: 6px;
+	border: 1px solid #e0e0e0;
+}
+
+.xmoney-theme-dark {
+	background: #1e1e1e;
+	border: 1px solid #333;
+}
+
+.xmoney-theme-dark .xmoney-theme-card {
+	width: 80%;
+	height: 100%;
+	background: #2d2d2d;
+	border-radius: 6px;
+	border: 1px solid #444;
+}
+
+.xmoney-theme-custom {
+	background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+	border: 1px solid transparent;
+}
+
+.xmoney-theme-custom .xmoney-theme-card {
+	width: 80%;
+	height: 100%;
+	background: rgba(255, 255, 255, 0.9);
+	border-radius: 6px;
+	backdrop-filter: blur(4px);
+}
+
+/* Color Fields */
+.xmoney-color-fields {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 20px;
+	margin-top: 20px;
+}
+
+.xmoney-color-field {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.xmoney-color-field label {
+	font-size: 14px;
+	font-weight: 500;
+	color: #1e1e1e;
+}
+
+.xmoney-color-input-wrap {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.xmoney-color-picker-input {
+	width: 48px;
+	height: 40px;
+	padding: 2px;
+	border: 1px solid #ddd;
+	border-radius: 6px;
+	cursor: pointer;
+	background: #fff;
+}
+
+.xmoney-color-picker-input::-webkit-color-swatch-wrapper {
+	padding: 2px;
+}
+
+.xmoney-color-picker-input::-webkit-color-swatch {
+	border-radius: 4px;
+	border: none;
+}
+
+.xmoney-color-text {
+	flex: 1;
+	padding: 10px 14px;
+	font-size: 14px;
+	border: 1px solid #ddd;
+	border-radius: 6px;
+	font-family: monospace;
+	text-transform: uppercase;
+}
+
+.xmoney-color-text:focus {
+	outline: none;
+	border-color: #7c3aed;
+	box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.xmoney-radius-field input {
+	width: 100%;
+	padding: 10px 14px;
+	font-size: 14px;
+	border: 1px solid #ddd;
+	border-radius: 6px;
+}
+
+.xmoney-radius-field input:focus {
+	outline: none;
+	border-color: #7c3aed;
+	box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+/* Buttons */
+.xmoney-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 10px 20px;
+	font-size: 14px;
+	font-weight: 500;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: all 0.2s;
+	margin-top: 16px;
+}
+
+.xmoney-btn-secondary {
+	background: #f5f5f5;
+	color: #1e1e1e;
+	border: 1px solid #ddd;
+}
+
+.xmoney-btn-secondary:hover {
+	background: #eee;
+}
+
 /* Responsive */
 @media (max-width: 782px) {
 	.xmoney-admin-wrap {
@@ -457,6 +691,19 @@
 
 	.xmoney-tab {
 		padding: 10px 16px;
+		font-size: 13px;
+	}
+
+	.xmoney-theme-selector {
+		grid-template-columns: 1fr;
+	}
+
+	.xmoney-color-fields {
+		grid-template-columns: 1fr;
+	}
+
+	.xmoney-tabs .xmoney-tab {
+		padding: 12px 16px;
 		font-size: 13px;
 	}
 }

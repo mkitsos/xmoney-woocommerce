@@ -82,9 +82,10 @@ class XMoney_WC_Ajax
 		// Return payment intent data.
 		wp_send_json_success(
 			array(
-				'publicKey' => $configuration['public_key'],
-				'payload'   => $payload,
-				'checksum'  => $checksum,
+				'publicKey'   => $configuration['public_key'],
+				'payload'     => $payload,
+				'checksum'    => $checksum,
+				'appearance'  => XMoney_WC_Helper::get_appearance_config(),
 			)
 		);
 	}
@@ -179,6 +180,7 @@ class XMoney_WC_Ajax
 				'payload'        => $payload,
 				'checksum'       => $checksum,
 				'temp_order_id'  => $temp_order_id,
+				'appearance'     => XMoney_WC_Helper::get_appearance_config(),
 			)
 		);
 	}

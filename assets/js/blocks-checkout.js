@@ -163,13 +163,7 @@
             applePay: {
               enabled: enableApplePay,
             },
-            appearance: {
-              theme: "light",
-              variables: {
-                colorPrimary: "#2271b1",
-                borderRadius: "4px",
-              },
-            },
+            appearance: initData.appearance || { theme: "light" },
           },
           onReady: () => {
             if (mountedRef.current) {

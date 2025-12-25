@@ -44,40 +44,58 @@ label[for="payment_method_xmoney_wc"] img {
 }
 
 .xmoney-wc-payment-form-container {
-	min-height: 400px;
-	margin: 20px 0;
-	padding: 20px;
-	background: #fff;
-	border: 1px solid #ddd;
-	border-radius: 4px;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
 }
 
-.xmoney-wc-payment-form-container.xmoney-ready {
-	border-color: #2271b1;
+/* Remove any extra spacing from the xMoney iframe/form */
+#xmoney-wc-payment-form {
+	margin: 0;
+	padding: 0;
 }
 
-/* Loading state */
+#xmoney-wc-payment-form > * {
+	margin: 0 !important;
+}
+
+/* Skeleton Loading State */
 .xmoney-wc-payment-form-container:not(.xmoney-ready) {
 	position: relative;
+	min-height: 320px;
 }
 
+/* Simple skeleton with pulse animation */
 .xmoney-wc-payment-form-container:not(.xmoney-ready)::after {
 	content: '';
 	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	width: 40px;
-	height: 40px;
-	border: 4px solid #f3f3f3;
-	border-top: 4px solid #2271b1;
-	border-radius: 50%;
-	animation: spin 1s linear infinite;
+	inset: 0;
+	background: 
+		/* Header */
+		linear-gradient(#e5e5e5 16px, transparent 0) 16px 16px / 140px 16px no-repeat,
+		/* Cardholder label */
+		linear-gradient(#ebebeb 12px, transparent 0) 16px 56px / 110px 12px no-repeat,
+		/* Cardholder input */
+		linear-gradient(#f5f5f5 50px, transparent 0) 16px 76px / calc(100% - 32px) 50px no-repeat,
+		/* Card number label */
+		linear-gradient(#ebebeb 12px, transparent 0) 16px 146px / 90px 12px no-repeat,
+		/* Card number input */
+		linear-gradient(#f5f5f5 50px, transparent 0) 16px 166px / calc(100% - 32px) 50px no-repeat,
+		/* Expiry label */
+		linear-gradient(#ebebeb 12px, transparent 0) 16px 236px / 100px 12px no-repeat,
+		/* Expiry input */
+		linear-gradient(#f5f5f5 50px, transparent 0) 16px 256px / calc(50% - 24px) 50px no-repeat,
+		/* CVV label */
+		linear-gradient(#ebebeb 12px, transparent 0) calc(50% + 8px) 236px / 40px 12px no-repeat,
+		/* CVV input */
+		linear-gradient(#f5f5f5 50px, transparent 0) calc(50% + 8px) 256px / calc(50% - 24px) 50px no-repeat;
+	border-radius: 8px;
+	animation: xmoney-pulse 1.5s ease-in-out infinite;
 }
 
-@keyframes spin {
-	0% { transform: translate(-50%, -50%) rotate(0deg); }
-	100% { transform: translate(-50%, -50%) rotate(360deg); }
+@keyframes xmoney-pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.5; }
 }
 
 /* Ensure form is visible */
