@@ -157,6 +157,56 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 				),
 			),
 			'color_primary'          => array(
+				'title'   => __('Primary Color', 'xmoney-woocommerce'),
+				'type'    => 'text',
+				'default' => '',
+			),
+			'color_danger'           => array(
+				'title'   => __('Danger Color', 'xmoney-woocommerce'),
+				'type'    => 'text',
+				'default' => '',
+			),
+			'color_background'       => array(
+				'title'   => __('Background Color', 'xmoney-woocommerce'),
+				'type'    => 'text',
+				'default' => '',
+			),
+			'color_background_focus' => array(
+				'title'   => __('Focus Background', 'xmoney-woocommerce'),
+				'type'    => 'text',
+				'default' => '',
+			),
+			'color_text'             => array(
+				'title'   => __('Text Color', 'xmoney-woocommerce'),
+				'type'    => 'text',
+				'default' => '',
+			),
+			'color_text_secondary'   => array(
+				'title'   => __('Secondary Text', 'xmoney-woocommerce'),
+				'type'    => 'text',
+				'default' => '',
+			),
+			'color_text_placeholder' => array(
+				'title'   => __('Placeholder Text', 'xmoney-woocommerce'),
+				'type'    => 'text',
+				'default' => '',
+			),
+			'color_border'           => array(
+				'title'   => __('Border Color', 'xmoney-woocommerce'),
+				'type'    => 'text',
+				'default' => '',
+			),
+			'color_border_focus'     => array(
+				'title'   => __('Focus Border', 'xmoney-woocommerce'),
+				'type'    => 'text',
+				'default' => '',
+			),
+			'border_radius'          => array(
+				'title'   => __('Border Radius', 'xmoney-woocommerce'),
+				'type'    => 'text',
+				'default' => '',
+			),
+			'color_primary'          => array(
 				'title'       => __('Primary Color', 'xmoney-woocommerce'),
 				'type'        => 'text',
 				'description' => __('Main accent color for buttons and highlights.', 'xmoney-woocommerce'),
@@ -543,9 +593,14 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 					// Try to detect theme colors
 					$theme_primary = $this->get_theme_primary_color();
 					$current_primary = $this->get_option('color_primary', '');
+					$current_danger = $this->get_option('color_danger', '');
 					$current_background = $this->get_option('color_background', '');
 					$current_text = $this->get_option('color_text', '');
+					$current_text_secondary = $this->get_option('color_text_secondary', '');
+					$current_text_placeholder = $this->get_option('color_text_placeholder', '');
 					$current_border = $this->get_option('color_border', '');
+					$current_border_focus = $this->get_option('color_border_focus', '');
+					$current_background_focus = $this->get_option('color_background_focus', '');
 					$current_radius = $this->get_option('border_radius', '');
 					$current_theme = $this->get_option('theme_mode', 'light');
 					?>
@@ -621,6 +676,17 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 							</div>
 
 							<div class="xmoney-color-field">
+								<label for="woocommerce_xmoney_wc_color_danger">
+									<?php esc_html_e('Danger Color', 'xmoney-woocommerce'); ?>
+								</label>
+								<div class="xmoney-color-input-wrap">
+									<input type="color" id="xmoney_color_danger_picker" value="<?php echo esc_attr($current_danger ?: '#e53935'); ?>" class="xmoney-color-picker-input">
+									<input type="text" id="woocommerce_xmoney_wc_color_danger" name="woocommerce_xmoney_wc_color_danger" value="<?php echo esc_attr($current_danger); ?>" placeholder="#e53935" class="xmoney-color-text">
+								</div>
+								<p class="xmoney-field-hint"><?php esc_html_e('Error and validation color', 'xmoney-woocommerce'); ?></p>
+							</div>
+
+							<div class="xmoney-color-field">
 								<label for="woocommerce_xmoney_wc_color_background">
 									<?php esc_html_e('Background Color', 'xmoney-woocommerce'); ?>
 								</label>
@@ -632,14 +698,47 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 							</div>
 
 							<div class="xmoney-color-field">
+								<label for="woocommerce_xmoney_wc_color_background_focus">
+									<?php esc_html_e('Focus Background', 'xmoney-woocommerce'); ?>
+								</label>
+								<div class="xmoney-color-input-wrap">
+									<input type="color" id="xmoney_color_background_focus_picker" value="<?php echo esc_attr($current_background_focus ?: '#ffffff'); ?>" class="xmoney-color-picker-input">
+									<input type="text" id="woocommerce_xmoney_wc_color_background_focus" name="woocommerce_xmoney_wc_color_background_focus" value="<?php echo esc_attr($current_background_focus); ?>" placeholder="#ffffff" class="xmoney-color-text">
+								</div>
+								<p class="xmoney-field-hint"><?php esc_html_e('Input background when focused', 'xmoney-woocommerce'); ?></p>
+							</div>
+
+							<div class="xmoney-color-field">
 								<label for="woocommerce_xmoney_wc_color_text">
 									<?php esc_html_e('Text Color', 'xmoney-woocommerce'); ?>
 								</label>
 								<div class="xmoney-color-input-wrap">
-									<input type="color" id="xmoney_color_text_picker" value="<?php echo esc_attr($current_text ?: '#1e1e1e'); ?>" class="xmoney-color-picker-input">
-									<input type="text" id="woocommerce_xmoney_wc_color_text" name="woocommerce_xmoney_wc_color_text" value="<?php echo esc_attr($current_text); ?>" placeholder="#1e1e1e" class="xmoney-color-text">
+									<input type="color" id="xmoney_color_text_picker" value="<?php echo esc_attr($current_text ?: '#212121'); ?>" class="xmoney-color-picker-input">
+									<input type="text" id="woocommerce_xmoney_wc_color_text" name="woocommerce_xmoney_wc_color_text" value="<?php echo esc_attr($current_text); ?>" placeholder="#212121" class="xmoney-color-text">
 								</div>
 								<p class="xmoney-field-hint"><?php esc_html_e('Primary text color', 'xmoney-woocommerce'); ?></p>
+							</div>
+
+							<div class="xmoney-color-field">
+								<label for="woocommerce_xmoney_wc_color_text_secondary">
+									<?php esc_html_e('Secondary Text', 'xmoney-woocommerce'); ?>
+								</label>
+								<div class="xmoney-color-input-wrap">
+									<input type="color" id="xmoney_color_text_secondary_picker" value="<?php echo esc_attr($current_text_secondary ?: '#757575'); ?>" class="xmoney-color-picker-input">
+									<input type="text" id="woocommerce_xmoney_wc_color_text_secondary" name="woocommerce_xmoney_wc_color_text_secondary" value="<?php echo esc_attr($current_text_secondary); ?>" placeholder="#757575" class="xmoney-color-text">
+								</div>
+								<p class="xmoney-field-hint"><?php esc_html_e('Labels and hints', 'xmoney-woocommerce'); ?></p>
+							</div>
+
+							<div class="xmoney-color-field">
+								<label for="woocommerce_xmoney_wc_color_text_placeholder">
+									<?php esc_html_e('Placeholder Text', 'xmoney-woocommerce'); ?>
+								</label>
+								<div class="xmoney-color-input-wrap">
+									<input type="color" id="xmoney_color_text_placeholder_picker" value="<?php echo esc_attr($current_text_placeholder ?: '#bdbdbd'); ?>" class="xmoney-color-picker-input">
+									<input type="text" id="woocommerce_xmoney_wc_color_text_placeholder" name="woocommerce_xmoney_wc_color_text_placeholder" value="<?php echo esc_attr($current_text_placeholder); ?>" placeholder="#bdbdbd" class="xmoney-color-text">
+								</div>
+								<p class="xmoney-field-hint"><?php esc_html_e('Input placeholder text', 'xmoney-woocommerce'); ?></p>
 							</div>
 
 							<div class="xmoney-color-field">
@@ -651,6 +750,17 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 									<input type="text" id="woocommerce_xmoney_wc_color_border" name="woocommerce_xmoney_wc_color_border" value="<?php echo esc_attr($current_border); ?>" placeholder="#e0e0e0" class="xmoney-color-text">
 								</div>
 								<p class="xmoney-field-hint"><?php esc_html_e('Input border color', 'xmoney-woocommerce'); ?></p>
+							</div>
+
+							<div class="xmoney-color-field">
+								<label for="woocommerce_xmoney_wc_color_border_focus">
+									<?php esc_html_e('Focus Border', 'xmoney-woocommerce'); ?>
+								</label>
+								<div class="xmoney-color-input-wrap">
+									<input type="color" id="xmoney_color_border_focus_picker" value="<?php echo esc_attr($current_border_focus ?: '#7c3aed'); ?>" class="xmoney-color-picker-input">
+									<input type="text" id="woocommerce_xmoney_wc_color_border_focus" name="woocommerce_xmoney_wc_color_border_focus" value="<?php echo esc_attr($current_border_focus); ?>" placeholder="#7c3aed" class="xmoney-color-text">
+								</div>
+								<p class="xmoney-field-hint"><?php esc_html_e('Input border when focused', 'xmoney-woocommerce'); ?></p>
 							</div>
 
 							<div class="xmoney-color-field xmoney-radius-field">
@@ -827,7 +937,7 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 				if (in_array($tx_status, $success_statuses, true)) {
 					// Payment successful - mark order as complete.
 					$order->payment_complete();
-					$order->add_order_note(__('Payment completed via xMoney (Embedded Checkout).', 'xmoney-woocommerce'));
+					$order->add_order_note(__('Payment completed via xMoney (Credit / Debit Card).', 'xmoney-woocommerce'));
 					
 					// Store xMoney order ID.
 					$xmoney_order_id = $payment_result['externalOrderId'] ?? '';

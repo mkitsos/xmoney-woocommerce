@@ -238,11 +238,16 @@ class XMoney_WC_Helper {
 		$variables = array();
 		
 		$color_map = array(
-			'color_primary'    => 'colorPrimary',
-			'color_background' => 'colorBackground',
-			'color_text'       => 'colorText',
-			'color_border'     => 'colorBorder',
-			'border_radius'    => 'borderRadius',
+			'color_primary'          => 'colorPrimary',
+			'color_danger'           => 'colorDanger',
+			'color_background'       => 'colorBackground',
+			'color_background_focus' => 'colorBackgroundFocus',
+			'color_text'             => 'colorText',
+			'color_text_secondary'   => 'colorTextSecondary',
+			'color_text_placeholder' => 'colorTextPlaceholder',
+			'color_border'           => 'colorBorder',
+			'color_border_focus'     => 'colorBorderFocus',
+			'border_radius'          => 'borderRadius',
 		);
 		
 		foreach ( $color_map as $setting_key => $sdk_key ) {
