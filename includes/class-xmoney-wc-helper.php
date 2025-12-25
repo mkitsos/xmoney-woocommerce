@@ -152,6 +152,72 @@ class XMoney_WC_Helper {
 	}
 
 	/**
+	 * Get list of EEA (European Economic Area) country codes.
+	 *
+	 * Includes all EU member states plus Iceland, Liechtenstein, and Norway.
+	 *
+	 * @return array Array of ISO 3166-1 alpha-2 country codes.
+	 */
+	public static function get_eea_countries(): array {
+		return array(
+			// EU Member States (27)
+			'AT', // Austria
+			'BE', // Belgium
+			'BG', // Bulgaria
+			'HR', // Croatia
+			'CY', // Cyprus
+			'CZ', // Czech Republic
+			'DK', // Denmark
+			'EE', // Estonia
+			'FI', // Finland
+			'FR', // France
+			'DE', // Germany
+			'GR', // Greece
+			'HU', // Hungary
+			'IE', // Ireland
+			'IT', // Italy
+			'LV', // Latvia
+			'LT', // Lithuania
+			'LU', // Luxembourg
+			'MT', // Malta
+			'NL', // Netherlands
+			'PL', // Poland
+			'PT', // Portugal
+			'RO', // Romania
+			'SK', // Slovakia
+			'SI', // Slovenia
+			'ES', // Spain
+			'SE', // Sweden
+			// EEA EFTA States (3)
+			'IS', // Iceland
+			'LI', // Liechtenstein
+			'NO', // Norway
+		);
+	}
+
+	/**
+	 * Check if a country is in the EEA.
+	 *
+	 * @param string $country_code ISO 3166-1 alpha-2 country code.
+	 * @return bool True if country is in EEA, false otherwise.
+	 */
+	public static function is_eea_country( string $country_code ): bool {
+		return in_array( strtoupper( $country_code ), self::get_eea_countries(), true );
+	}
+
+	/**
+	 * Check if the store's base country is in the EEA.
+	 *
+	 * @return bool True if store is in EEA, false otherwise.
+	 */
+	public static function is_store_in_eea(): bool {
+		$base_location = wc_get_base_location();
+		$country_code  = $base_location['country'] ?? '';
+
+		return self::is_eea_country( $country_code );
+	}
+
+	/**
 	 * Format phone number.
 	 *
 	 * @param string $phone Phone number.

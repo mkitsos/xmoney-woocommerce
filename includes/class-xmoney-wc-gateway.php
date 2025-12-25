@@ -213,8 +213,25 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 		$public_key = $this->get_option('public_key', '');
 		$environment = XMoney_WC_Helper::get_environment($public_key);
 		$is_configured = ! empty($public_key) && ! empty($this->get_option('secret_key'));
+		$is_eea = XMoney_WC_Helper::is_store_in_eea();
 
 		?>
+		<?php if (! $is_eea) : ?>
+			<div class="notice notice-warning" style="margin-left: 0;">
+				<p>
+					<strong><?php esc_html_e('xMoney is only available for merchants in the European Economic Area (EEA).', 'xmoney-woocommerce'); ?></strong><br>
+					<?php
+					$base_location = wc_get_base_location();
+					$current_country = $base_location['country'] ?? __('Not set', 'xmoney-woocommerce');
+					printf(
+						/* translators: %s: Current store country code */
+						esc_html__('Your store\'s base country is set to: %s. Please update your store location in WooCommerce > Settings > General if this is incorrect.', 'xmoney-woocommerce'),
+						'<strong>' . esc_html($current_country) . '</strong>'
+					);
+					?>
+				</p>
+			</div>
+		<?php endif; ?>
 		<div class="xmoney-admin-wrap xmoney-gateway-settings">
 			<div class="xmoney-admin-header">
 				<div class="xmoney-header-content">
@@ -435,6 +452,11 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 		// Always show the gateway in admin/settings, even if credentials aren't configured yet.
 		if (is_admin()) {
 			return true;
+		}
+
+		// xMoney is only available for merchants in the EEA (European Economic Area).
+		if (! XMoney_WC_Helper::is_store_in_eea()) {
+			return false;
 		}
 
 		$configuration = XMoney_WC_Helper::get_configuration();
