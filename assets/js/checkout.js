@@ -10,6 +10,7 @@
     isInitializing: false,
     paymentFormReady: false,
     pendingPaymentResult: null,
+    cachedPaymentIntent: null,
 
     /**
      * Initialize checkout.
@@ -57,23 +58,12 @@
     onPaymentMethodSelected: function () {
       var selectedMethod = $('input[name="payment_method"]:checked').val();
       if (selectedMethod === "xmoney_wc") {
+        // Only initialize if not already initialized.
         if (!this.checkoutInstance && !this.isInitializing) {
           this.initPaymentForm();
         }
-      } else {
-        // Reset state when switching away from xMoney.
-        this.isInitializing = false;
-        this.paymentFormReady = false;
-        this.pendingPaymentResult = null;
-        if (this.checkoutInstance) {
-          try {
-            this.checkoutInstance.destroy();
-          } catch (e) {
-            // Ignore destroy errors
-          }
-          this.checkoutInstance = null;
-        }
       }
+      // Don't destroy the form when switching away - preserve it for when user comes back.
     },
 
     /**
@@ -162,6 +152,12 @@
     createPaymentIntentFromCart: function () {
       var self = this;
 
+      // Use cached payment intent if available
+      if (this.cachedPaymentIntent) {
+        this.createPaymentForm(this.cachedPaymentIntent);
+        return;
+      }
+
       $.ajax({
         type: "POST",
         url: xmoneyWc.ajaxUrl,
@@ -172,6 +168,8 @@
         dataType: "json",
         success: function (response) {
           if (response.success && response.data) {
+            // Cache the payment intent
+            self.cachedPaymentIntent = response.data;
             self.createPaymentForm(response.data);
           } else {
             self.isInitializing = false;
@@ -369,6 +367,7 @@
       this.paymentFormReady = false;
       this.isInitializing = false;
       this.pendingPaymentResult = null;
+      this.cachedPaymentIntent = null; // Clear cache to get fresh data.
       
       // Small delay before re-initializing.
       setTimeout(function () {

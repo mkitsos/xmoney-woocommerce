@@ -20,6 +20,15 @@
     : "";
   const icon = settings.icon || "";
 
+  // Global state to persist form across component mounts (payment method switching)
+  const globalState = {
+    formInstance: null,
+    containerId: "xmoney-wc-blocks-form-global",
+    isInitialized: false,
+    isInitializing: false,
+    paymentIntent: null,
+  };
+
   // Generate unique container ID to avoid conflicts
   let containerCounter = 0;
 
@@ -53,24 +62,48 @@
   const Content = (props) => {
     const { eventRegistration, emitResponse } = props;
     const { onPaymentSetup } = eventRegistration;
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(!globalState.isInitialized);
     const [error, setError] = useState(null);
-    const [paymentFormReady, setPaymentFormReady] = useState(false);
-    const formInstanceRef = useRef(null);
-    const containerRef = useRef(null);
-    const [containerId] = useState(
-      () => `xmoney-wc-blocks-form-${++containerCounter}`
+    const [paymentFormReady, setPaymentFormReady] = useState(
+      globalState.isInitialized
     );
+    const formInstanceRef = useRef(globalState.formInstance);
+    const containerRef = useRef(null);
+    const containerId = globalState.containerId;
     const mountedRef = useRef(true);
-    const initializingRef = useRef(false);
 
     // Initialize payment form
     const initPaymentForm = useCallback(async () => {
       // Prevent multiple initializations
-      if (initializingRef.current || formInstanceRef.current) {
+      if (globalState.isInitializing) {
         return;
       }
-      initializingRef.current = true;
+
+      // Check if we have a saved form instance
+      if (globalState.isInitialized && globalState.formInstance) {
+        // Check if the container still has the form content
+        const container = document.getElementById(containerId);
+        const hasFormContent = container && container.children.length > 0;
+
+        if (hasFormContent) {
+          // Form is still in DOM, just update local state
+          formInstanceRef.current = globalState.formInstance;
+          setIsLoading(false);
+          setPaymentFormReady(true);
+          return;
+        } else {
+          // Container was re-created, need to reinitialize
+          try {
+            globalState.formInstance.destroy();
+          } catch (e) {
+            // Ignore destroy errors
+          }
+          globalState.formInstance = null;
+          globalState.isInitialized = false;
+        }
+      }
+
+      globalState.isInitializing = true;
 
       try {
         // Wait for SDK to load
@@ -97,24 +130,33 @@
 
         if (!mountedRef.current) return;
 
-        // Create payment intent from cart
-        const response = await fetch(settings.ajaxUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            action: "xmoney_wc_create_payment_intent_from_cart",
-            nonce: settings.nonce,
-          }),
-        });
+        // Use cached payment intent if available, otherwise fetch new one
+        let data;
+        if (globalState.paymentIntent) {
+          data = { success: true, data: globalState.paymentIntent };
+        } else {
+          // Create payment intent from cart
+          const response = await fetch(settings.ajaxUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+              action: "xmoney_wc_create_payment_intent_from_cart",
+              nonce: settings.nonce,
+            }),
+          });
 
-        const data = await response.json();
+          data = await response.json();
 
-        if (!data.success || !data.data) {
-          throw new Error(
-            data.data?.message || "Failed to create payment intent"
-          );
+          if (!data.success || !data.data) {
+            throw new Error(
+              data.data?.message || "Failed to create payment intent"
+            );
+          }
+
+          // Cache the payment intent
+          globalState.paymentIntent = data.data;
         }
 
         if (!mountedRef.current) return;
@@ -145,7 +187,7 @@
           settings.enableSavedCards === "true";
 
         // Create payment form
-        formInstanceRef.current = new window.XMoneyPaymentForm({
+        const formInstance = new window.XMoneyPaymentForm({
           container: containerId,
           publicKey: data.data.publicKey,
           orderPayload: data.data.payload,
@@ -166,6 +208,9 @@
             appearance: initData.appearance || { theme: "light" },
           },
           onReady: () => {
+            globalState.isInitialized = true;
+            globalState.formInstance = formInstance;
+            formInstanceRef.current = formInstance;
             if (mountedRef.current) {
               setIsLoading(false);
               setPaymentFormReady(true);
@@ -193,13 +238,17 @@
             }
           },
         });
+
+        // Store reference immediately
+        formInstanceRef.current = formInstance;
+        globalState.formInstance = formInstance;
       } catch (err) {
         if (mountedRef.current) {
           setError(err.message || "Failed to load payment form");
           setIsLoading(false);
         }
       } finally {
-        initializingRef.current = false;
+        globalState.isInitializing = false;
       }
     }, [containerId]);
 
@@ -215,16 +264,7 @@
       return () => {
         mountedRef.current = false;
         clearTimeout(timer);
-
-        // Cleanup form instance
-        if (formInstanceRef.current) {
-          try {
-            formInstanceRef.current.destroy();
-          } catch (e) {
-            // Ignore destroy errors
-          }
-          formInstanceRef.current = null;
-        }
+        // Don't destroy the form - preserve it for when user switches back to xMoney.
       };
     }, [initPaymentForm]);
 
@@ -333,6 +373,11 @@
           window.xmoneyPaymentError = null;
           setPaymentFormReady(false);
 
+          // Reset global state.
+          globalState.isInitialized = false;
+          globalState.isInitializing = false;
+          globalState.paymentIntent = null; // Clear cached payment intent to get fresh data.
+
           // Destroy current instance and re-init.
           if (formInstanceRef.current) {
             try {
@@ -341,6 +386,7 @@
               // Ignore destroy errors.
             }
             formInstanceRef.current = null;
+            globalState.formInstance = null;
           }
 
           // Re-initialize after a short delay.
