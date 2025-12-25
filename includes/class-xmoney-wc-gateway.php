@@ -911,6 +911,9 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 	/**
 	 * Process the payment and return the result.
 	 *
+	 * SECURITY: This method does NOT trust frontend-submitted payment status.
+	 * All payments are verified via server-to-server API call to xMoney.
+	 *
 	 * @param int $order_id Order ID.
 	 * @return array
 	 */
@@ -925,55 +928,91 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 			);
 		}
 
-		// Check if payment result is passed from Blocks checkout.
+		// Check if payment result is passed from Blocks or Classic checkout.
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$payment_result_json = isset($_POST['xmoney_payment_result']) ? sanitize_text_field(wp_unslash($_POST['xmoney_payment_result'])) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$external_order_id = isset($_POST['xmoney_external_order_id']) ? sanitize_text_field(wp_unslash($_POST['xmoney_external_order_id'])) : '';
 		
-		if (!empty($payment_result_json)) {
-			// Payment already completed (from Blocks or Classic checkout).
-			$payment_result = json_decode($payment_result_json, true);
+		if (!empty($payment_result_json) && !empty($external_order_id)) {
+			// Payment callback received - VERIFY via xMoney API (never trust frontend).
+			$verification = XMoney_WC_Helper::verify_payment_status($external_order_id);
 			
-			if ($payment_result) {
-				$tx_status = strtolower($payment_result['transactionStatus'] ?? '');
-				$success_statuses = array('complete-ok', 'in-progress', 'open-ok');
+			if (is_wp_error($verification)) {
+				// API call failed - set order to pending for manual review.
+				$order->update_status(
+					'pending',
+					sprintf(
+						/* translators: %s: Error message */
+						__('Payment verification failed: %s. Requires manual review.', 'xmoney-woocommerce'),
+						$verification->get_error_message()
+					)
+				);
 				
-				if (in_array($tx_status, $success_statuses, true)) {
-					// Payment successful - mark order as complete.
-					$order->payment_complete();
-					$order->add_order_note(__('Payment completed via xMoney (Credit / Debit Card).', 'xmoney-woocommerce'));
-					
-					// Store xMoney order ID.
-					$xmoney_order_id = $payment_result['externalOrderId'] ?? '';
-					if ($xmoney_order_id) {
-						$order->update_meta_data('_xmoney_order_id', $xmoney_order_id);
-						$order->save();
-					}
-					
-					// Clear cart.
-					WC()->cart->empty_cart();
-					
-					return array(
-						'result'   => 'success',
-						'redirect' => $this->get_return_url($order),
-					);
-				} else {
-					// Payment failed.
-					$order->update_status('failed', sprintf(
-						/* translators: %s: Payment status */
-						__('Payment failed via xMoney. Status: %s', 'xmoney-woocommerce'),
-						$tx_status
-					));
-					
-					return array(
-						'result'   => 'fail',
-						'redirect' => '',
-					);
+				wc_add_notice(
+					__('Payment verification failed. Your order is pending review. Please contact support.', 'xmoney-woocommerce'),
+					'error'
+				);
+				
+				return array(
+					'result'   => 'fail',
+					'redirect' => '',
+				);
+			}
+			
+			// Check API-verified payment status.
+			$api_status = $verification['order_status'];
+			$is_success = XMoney_WC_Helper::is_successful_payment_status($api_status);
+			
+			if ($is_success) {
+				// Payment verified successful via xMoney API.
+				$order->payment_complete();
+				$order->add_order_note(
+					sprintf(
+						/* translators: %s: Transaction status */
+						__('Payment verified via xMoney API. Status: %s', 'xmoney-woocommerce'),
+						$api_status
+					)
+				);
+				
+				// Store xMoney order ID.
+				$xmoney_order_id = $verification['order_id'];
+				if ($xmoney_order_id) {
+					$order->update_meta_data('_xmoney_order_id', $xmoney_order_id);
 				}
+				
+				// Store customer ID.
+				$customer_id = $verification['customer_id'];
+				if ($customer_id) {
+					$order->update_meta_data('_xmoney_customer_id', $customer_id);
+				}
+				
+				$order->save();
+				
+				// Clear cart.
+				WC()->cart->empty_cart();
+				
+				return array(
+					'result'   => 'success',
+					'redirect' => $this->get_return_url($order),
+				);
+			} else {
+				// Payment failed based on API verification.
+				$order->update_status('failed', sprintf(
+					/* translators: %s: Payment status */
+					__('Payment failed (verified via xMoney API). Status: %s', 'xmoney-woocommerce'),
+					$api_status
+				));
+				
+				return array(
+					'result'   => 'fail',
+					'redirect' => '',
+				);
 			}
 		}
 
-		// Classic checkout - payment will be processed via JavaScript/AJAX.
-		// For now, mark order as pending and let AJAX handler complete it.
+		// No payment result yet - set order to pending.
+		// Payment will be verified via AJAX handler after xMoney SDK callback.
 		$order->update_status('pending', __('Awaiting xMoney payment.', 'xmoney-woocommerce'));
 		
 		return array(

@@ -329,6 +329,120 @@ class XMoney_WC_Helper {
 	}
 
 	/**
+	 * Get xMoney API base URL based on environment.
+	 *
+	 * @param bool $is_live Whether in live mode.
+	 * @return string API base URL.
+	 */
+	public static function get_api_base_url( bool $is_live ): string {
+		return $is_live
+			? 'https://api.xmoney.com'
+			: 'https://api-stage.xmoney.com';
+	}
+
+	/**
+	 * Verify payment status via xMoney API.
+	 *
+	 * Makes a server-to-server call to xMoney to verify the payment status.
+	 * This is the secure way to confirm a payment - never trust frontend data.
+	 *
+	 * @param string $external_order_id The external order ID sent to xMoney.
+	 * @return array|WP_Error Array with 'success' boolean and 'data' on success, WP_Error on failure.
+	 */
+	public static function verify_payment_status( string $external_order_id ) {
+		$configuration = self::get_configuration();
+		$secret_key    = $configuration['secret_key'];
+		$is_live       = $configuration['is_live'];
+
+		if ( empty( $secret_key ) ) {
+			return new \WP_Error( 'missing_secret_key', __( 'Secret key not configured.', 'xmoney-woocommerce' ) );
+		}
+
+		// Get the actual secret key value (without prefix) for API authentication.
+		$api_key = self::get_secret_key_value( $secret_key );
+
+		// Build API URL.
+		$api_base = self::get_api_base_url( $is_live );
+		$api_url  = add_query_arg( 'externalOrderId', $external_order_id, $api_base . '/order' );
+
+		// Make API request.
+		$response = wp_remote_get(
+			$api_url,
+			array(
+				'headers' => array(
+					'Authorization' => 'Bearer ' . $api_key,
+					'Content-Type'  => 'application/json',
+				),
+				'timeout' => 30,
+			)
+		);
+
+		// Check for WP errors.
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		// Check HTTP status.
+		$http_code = wp_remote_retrieve_response_code( $response );
+		if ( 200 !== $http_code ) {
+			return new \WP_Error(
+				'api_error',
+				sprintf(
+					/* translators: %d: HTTP status code */
+					__( 'xMoney API returned HTTP %d', 'xmoney-woocommerce' ),
+					$http_code
+				)
+			);
+		}
+
+		// Parse response.
+		$body = wp_remote_retrieve_body( $response );
+		$data = json_decode( $body, true );
+
+		if ( null === $data ) {
+			return new \WP_Error( 'invalid_response', __( 'Invalid JSON response from xMoney API.', 'xmoney-woocommerce' ) );
+		}
+
+		// Check API response code.
+		if ( ! isset( $data['code'] ) || 200 !== $data['code'] ) {
+			return new \WP_Error(
+				'api_error',
+				$data['message'] ?? __( 'Unknown API error.', 'xmoney-woocommerce' )
+			);
+		}
+
+		// Check if order exists in response.
+		if ( empty( $data['data'] ) || ! is_array( $data['data'] ) || 0 === count( $data['data'] ) ) {
+			return new \WP_Error( 'order_not_found', __( 'Order not found in xMoney.', 'xmoney-woocommerce' ) );
+		}
+
+		// Get the first (and should be only) order.
+		$order_data = $data['data'][0];
+
+		// Return structured result.
+		return array(
+			'success'      => true,
+			'order_id'     => $order_data['id'] ?? 0,
+			'order_status' => $order_data['orderStatus'] ?? '',
+			'amount'       => $order_data['amount'] ?? '0.00',
+			'currency'     => $order_data['currency'] ?? '',
+			'customer_id'  => $order_data['customerId'] ?? 0,
+			'raw_data'     => $order_data,
+		);
+	}
+
+	/**
+	 * Check if an order status indicates successful payment.
+	 *
+	 * @param string $order_status The order status from xMoney API.
+	 * @return bool True if payment was successful.
+	 */
+	public static function is_successful_payment_status( string $order_status ): bool {
+		$success_statuses = array( 'complete-ok', 'in-progress', 'open-ok' );
+		return in_array( strtolower( $order_status ), $success_statuses, true );
+	}
+
+	/**
 	 * Prepare order data for xMoney API.
 	 *
 	 * @param WC_Order $order WooCommerce order object.

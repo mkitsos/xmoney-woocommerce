@@ -35,6 +35,9 @@ class XMoney_WC_IPN {
 
 	/**
 	 * Handle IPN request.
+	 *
+	 * SECURITY: This handler verifies payment status via xMoney API
+	 * rather than trusting the IPN data directly.
 	 */
 	public function handle_ipn_request() {
 		global $wp_query;
@@ -43,7 +46,6 @@ class XMoney_WC_IPN {
 			return;
 		}
 
-		// Log IPN request.
 		$this->log( 'IPN request received' );
 
 		// Get request data.
@@ -56,34 +58,64 @@ class XMoney_WC_IPN {
 			return;
 		}
 
-		// Extract order ID from IPN data.
-		$order_id = isset( $data['orderId'] ) ? absint( $data['orderId'] ) : 0;
+		// Extract external order ID from IPN data (WooCommerce order ID or temp ID).
+		$external_order_id = isset( $data['externalOrderId'] ) ? sanitize_text_field( $data['externalOrderId'] ) : '';
 
-		if ( ! $order_id ) {
-			$this->log( 'Order ID missing in IPN data' );
-			$this->send_response( 400, 'Order ID missing' );
+		if ( empty( $external_order_id ) ) {
+			$this->log( 'External Order ID missing in IPN data' );
+			$this->send_response( 400, 'External Order ID missing' );
 			return;
 		}
 
-		$order = wc_get_order( $order_id );
+		// Extract WooCommerce order ID from external order ID.
+		// Format can be: "123" or "temp-1234567890-abcdefgh".
+		$wc_order_id = 0;
+		if ( strpos( $external_order_id, 'temp-' ) === 0 ) {
+			// For temp orders, we need to find the order by meta data.
+			$this->log( 'IPN for temp order: ' . $external_order_id );
+			// Temp orders are handled differently - skip for now.
+			$this->send_response( 200, 'OK - temp order, will be handled by checkout' );
+			return;
+		} else {
+			$wc_order_id = absint( $external_order_id );
+		}
+
+		if ( ! $wc_order_id ) {
+			$this->log( 'Could not extract WC Order ID from: ' . $external_order_id );
+			$this->send_response( 400, 'Invalid order ID format' );
+			return;
+		}
+
+		$order = wc_get_order( $wc_order_id );
 
 		if ( ! $order ) {
-			$this->log( 'Order not found: ' . $order_id );
+			$this->log( 'Order not found: ' . $wc_order_id );
 			$this->send_response( 404, 'Order not found' );
 			return;
 		}
 
-		// Verify IPN signature if provided.
-		// Note: xMoney may send signature verification in headers or data.
-		// Adjust based on actual xMoney IPN implementation.
+		// SECURITY: Verify payment status via xMoney API.
+		// Never trust IPN data directly - always verify with the API.
+		$verification = XMoney_WC_Helper::verify_payment_status( $external_order_id );
 
-		// Process IPN based on status (xMoney uses 'transactionStatus' field).
-		$status = isset( $data['transactionStatus'] ) ? sanitize_text_field( $data['transactionStatus'] ) : '';
-		if ( empty( $status ) ) {
-			$status = isset( $data['status'] ) ? sanitize_text_field( $data['status'] ) : '';
+		if ( is_wp_error( $verification ) ) {
+			$this->log( 'API verification failed: ' . $verification->get_error_message() );
+			// Still return 200 to prevent retries - mark order for manual review.
+			$order->add_order_note(
+				sprintf(
+					/* translators: %s: Error message */
+					__( 'IPN received but API verification failed: %s', 'xmoney-woocommerce' ),
+					$verification->get_error_message()
+				)
+			);
+			$this->send_response( 200, 'OK - verification pending' );
+			return;
 		}
 
-		$this->process_ipn_status( $order, $status, $data );
+		// Process based on API-verified status.
+		$api_status = $verification['order_status'];
+		$this->log( 'API verified status: ' . $api_status );
+		$this->process_ipn_status( $order, $api_status, $verification );
 
 		// Send success response.
 		$this->send_response( 200, 'OK' );

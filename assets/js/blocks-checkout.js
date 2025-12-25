@@ -209,7 +209,7 @@
             applePay: {
               enabled: enableApplePay,
             },
-            appearance: initData.appearance || { theme: "light" },
+            appearance: data.data.appearance || { theme: "light" },
           },
           onReady: () => {
             globalState.isInitialized = true;
