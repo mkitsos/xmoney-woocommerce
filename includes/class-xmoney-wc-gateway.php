@@ -280,6 +280,38 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 				</p>
 			</div>
 		<?php endif; ?>
+
+		<?php if ('test' === $environment && $is_configured) : ?>
+			<div class="notice notice-warning xmoney-notice-test" style="margin-left: 0; border-left-color: #dba617;">
+				<p>
+					<strong><?php esc_html_e('You\'re in test mode.', 'xmoney-woocommerce'); ?></strong>
+					<?php esc_html_e('Payments will be simulated and no real charges will occur.', 'xmoney-woocommerce'); ?>
+				</p>
+			</div>
+		<?php endif; ?>
+
+		<?php
+		$ssl_notice_dismissed = get_option('xmoney_wc_ssl_notice_dismissed', 'no');
+		if ('yes' === $this->enabled && ! is_ssl() && 'yes' !== $ssl_notice_dismissed) :
+		?>
+			<div class="notice notice-warning xmoney-notice-ssl is-dismissible" style="margin-left: 0; border-left-color: #dba617;">
+				<p>
+					<strong><?php esc_html_e('Secure connection recommended.', 'xmoney-woocommerce'); ?></strong>
+					<?php esc_html_e('For secure payment processing, we recommend enabling HTTPS on your site.', 'xmoney-woocommerce'); ?>
+					<a href="https://developer.wordpress.org/advanced-administration/security/https/" target="_blank"><?php esc_html_e('Learn more', 'xmoney-woocommerce'); ?></a>
+				</p>
+			</div>
+			<script>
+			jQuery(document).ready(function($) {
+				$('.xmoney-notice-ssl').on('click', '.notice-dismiss', function() {
+					$.post(ajaxurl, {
+						action: 'xmoney_dismiss_ssl_notice',
+						nonce: '<?php echo esc_js(wp_create_nonce('xmoney_dismiss_ssl')); ?>'
+					});
+				});
+			});
+			</script>
+		<?php endif; ?>
 		<div class="xmoney-admin-wrap xmoney-gateway-settings">
 			<div class="xmoney-admin-header">
 				<div class="xmoney-header-content">

@@ -70,13 +70,13 @@
 
 .xmoney-status-active,
 .xmoney-status-live {
-	background: #e6f4ea;
-	color: #1e8e3e;
+	background: #dcfce7;
+	color: #16a34a;
 }
 
 .xmoney-status-test {
-	background: #e8f0fe;
-	color: #1967d2;
+	background: #fef3c7;
+	color: #d97706;
 }
 
 .xmoney-status-inactive {

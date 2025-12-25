@@ -29,6 +29,22 @@ class XMoney_WC_Ajax
 		add_action('wp_ajax_nopriv_xmoney_wc_create_payment_intent_from_cart', array($this, 'create_payment_intent_from_cart'));
 		add_action('wp_ajax_xmoney_wc_handle_payment_complete', array($this, 'handle_payment_complete'));
 		add_action('wp_ajax_nopriv_xmoney_wc_handle_payment_complete', array($this, 'handle_payment_complete'));
+		add_action('wp_ajax_xmoney_dismiss_ssl_notice', array($this, 'dismiss_ssl_notice'));
+	}
+
+	/**
+	 * Dismiss SSL notice.
+	 */
+	public function dismiss_ssl_notice()
+	{
+		check_ajax_referer('xmoney_dismiss_ssl', 'nonce');
+
+		if (! current_user_can('manage_woocommerce')) {
+			wp_send_json_error(array('message' => 'Unauthorized'));
+		}
+
+		update_option('xmoney_wc_ssl_notice_dismissed', 'yes');
+		wp_send_json_success();
 	}
 
 	/**
