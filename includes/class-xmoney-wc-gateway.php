@@ -955,14 +955,13 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 				$order->update_status(
 					'pending',
 					sprintf(
-						/* translators: %s: Error message */
-						__('Payment verification failed: %s. Requires manual review.', 'xmoney-woocommerce'),
+						XMoney_WC_Helper::get_order_note('verification_error'),
 						$verification->get_error_message()
 					)
 				);
 				
 				wc_add_notice(
-					__('Payment verification failed. Your order is pending review. Please contact support.', 'xmoney-woocommerce'),
+					XMoney_WC_Helper::get_order_note('verification_pending'),
 					'error'
 				);
 				
@@ -981,8 +980,7 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 				$order->payment_complete();
 				$order->add_order_note(
 					sprintf(
-						/* translators: %s: Transaction status */
-						__('Payment verified via xMoney API. Status: %s', 'xmoney-woocommerce'),
+						XMoney_WC_Helper::get_order_note('verified_success'),
 						$api_status
 					)
 				);
@@ -1011,8 +1009,7 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 			} else {
 				// Payment failed based on API verification.
 				$order->update_status('failed', sprintf(
-					/* translators: %s: Payment status */
-					__('Payment failed (verified via xMoney API). Status: %s', 'xmoney-woocommerce'),
+					XMoney_WC_Helper::get_order_note('verified_failed'),
 					$api_status
 				));
 				
@@ -1025,7 +1022,7 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 
 		// No payment result yet - set order to pending.
 		// Payment will be verified via AJAX handler after xMoney SDK callback.
-		$order->update_status('pending', __('Awaiting xMoney payment.', 'xmoney-woocommerce'));
+		$order->update_status('pending', XMoney_WC_Helper::get_order_note('awaiting_payment'));
 		
 		return array(
 			'result'   => 'success',

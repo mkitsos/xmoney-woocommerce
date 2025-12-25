@@ -54,7 +54,7 @@ class XMoney_WC_Ajax
 	{
 		// Verify nonce.
 		if (! check_ajax_referer('xmoney_wc_nonce', 'nonce', false)) {
-			wp_send_json_error(array('message' => __('Invalid security token.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('invalid_token')));
 			return;
 		}
 
@@ -62,21 +62,21 @@ class XMoney_WC_Ajax
 		$order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
 
 		if (! $order_id) {
-			wp_send_json_error(array('message' => __('Order ID is required.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('order_id_required')));
 			return;
 		}
 
 		$order = wc_get_order($order_id);
 
 		if (! $order) {
-			wp_send_json_error(array('message' => __('Order not found.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('order_not_found')));
 			return;
 		}
 
 		// Verify order key.
 		$order_key = isset($_POST['order_key']) ? sanitize_text_field(wp_unslash($_POST['order_key'])) : '';
 		if ($order->get_order_key() !== $order_key) {
-			wp_send_json_error(array('message' => __('Invalid order key.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('invalid_order_key')));
 			return;
 		}
 
@@ -84,7 +84,7 @@ class XMoney_WC_Ajax
 		$configuration = XMoney_WC_Helper::get_configuration();
 
 		if (empty($configuration['public_key']) || empty($configuration['secret_key'])) {
-			wp_send_json_error(array('message' => __('Payment gateway is not configured.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('not_configured')));
 			return;
 		}
 
@@ -113,13 +113,13 @@ class XMoney_WC_Ajax
 	{
 		// Verify nonce.
 		if (! check_ajax_referer('xmoney_wc_nonce', 'nonce', false)) {
-			wp_send_json_error(array('message' => __('Invalid security token.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('invalid_token')));
 			return;
 		}
 
 		// Check if cart exists.
 		if (! WC()->cart || WC()->cart->is_empty()) {
-			wp_send_json_error(array('message' => __('Cart is empty.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('cart_empty')));
 			return;
 		}
 
@@ -127,7 +127,7 @@ class XMoney_WC_Ajax
 		$configuration = XMoney_WC_Helper::get_configuration();
 
 		if (empty($configuration['public_key']) || empty($configuration['secret_key'])) {
-			wp_send_json_error(array('message' => __('Payment gateway is not configured.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('not_configured')));
 			return;
 		}
 
@@ -211,7 +211,7 @@ class XMoney_WC_Ajax
 	{
 		// Verify nonce.
 		if (! check_ajax_referer('xmoney_wc_nonce', 'nonce', false)) {
-			wp_send_json_error(array('message' => __('Invalid security token.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('invalid_token')));
 			return;
 		}
 
@@ -220,19 +220,19 @@ class XMoney_WC_Ajax
 		$external_order_id = isset($_POST['external_order_id']) ? sanitize_text_field(wp_unslash($_POST['external_order_id'])) : '';
 
 		if (! $order_id) {
-			wp_send_json_error(array('message' => __('Missing order ID.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('order_id_missing')));
 			return;
 		}
 
 		if (empty($external_order_id)) {
-			wp_send_json_error(array('message' => __('Missing external order ID for verification.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('external_order_id_missing')));
 			return;
 		}
 
 		$order = wc_get_order($order_id);
 
 		if (! $order) {
-			wp_send_json_error(array('message' => __('Order not found.', 'xmoney-woocommerce')));
+			wp_send_json_error(array('message' => XMoney_WC_Helper::get_error('order_not_found')));
 			return;
 		}
 
@@ -245,15 +245,14 @@ class XMoney_WC_Ajax
 			$order->update_status(
 				'pending',
 				sprintf(
-					/* translators: %s: Error message */
-					__('Payment verification failed: %s. Order requires manual review.', 'xmoney-woocommerce'),
+					XMoney_WC_Helper::get_order_note('verification_error'),
 					$verification->get_error_message()
 				)
 			);
 
 			wp_send_json_error(
 				array(
-					'message'  => __('Payment verification failed. Please contact support.', 'xmoney-woocommerce'),
+					'message'  => XMoney_WC_Helper::get_error('verification_failed'),
 					'redirect' => wc_get_checkout_url(),
 				)
 			);
@@ -269,8 +268,7 @@ class XMoney_WC_Ajax
 			$order->payment_complete();
 			$order->add_order_note(
 				sprintf(
-					/* translators: %s: Transaction status */
-					__('Payment verified via xMoney API. Status: %s', 'xmoney-woocommerce'),
+					XMoney_WC_Helper::get_order_note('verified_success'),
 					$api_status
 				)
 			);
@@ -300,14 +298,13 @@ class XMoney_WC_Ajax
 		} else {
 			// Payment failed based on API verification.
 			$order->update_status('failed', sprintf(
-				/* translators: %s: Transaction status */
-				__('Payment failed (verified via xMoney API). Status: %s', 'xmoney-woocommerce'),
+				XMoney_WC_Helper::get_order_note('verified_failed'),
 				$api_status
 			));
 
 			wp_send_json_error(
 				array(
-					'message' => __('Payment failed. Please try again.', 'xmoney-woocommerce'),
+					'message' => XMoney_WC_Helper::get_error('payment_failed'),
 				)
 			);
 		}

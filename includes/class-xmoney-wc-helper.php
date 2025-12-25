@@ -490,9 +490,71 @@ class XMoney_WC_Helper {
 	 */
 	public static function get_test_mode_notice(): array {
 		return array(
-			'title' => __( "Test mode.", 'xmoney-woocommerce' ),
+			'title' => __( 'Test mode.', 'xmoney-woocommerce' ),
 			'text'  => __( 'Payments will be simulated and no real charges will occur.', 'xmoney-woocommerce' ),
 		);
+	}
+
+	/**
+	 * Get error messages used throughout the plugin.
+	 *
+	 * @return array Associative array of error messages.
+	 */
+	public static function get_error_messages(): array {
+		return array(
+			'invalid_token'            => __( 'Invalid security token.', 'xmoney-woocommerce' ),
+			'order_not_found'          => __( 'Order not found.', 'xmoney-woocommerce' ),
+			'order_id_required'        => __( 'Order ID is required.', 'xmoney-woocommerce' ),
+			'order_id_missing'         => __( 'Missing order ID.', 'xmoney-woocommerce' ),
+			'external_order_id_missing'=> __( 'Missing external order ID for verification.', 'xmoney-woocommerce' ),
+			'invalid_order_key'        => __( 'Invalid order key.', 'xmoney-woocommerce' ),
+			'not_configured'           => __( 'Payment gateway is not configured.', 'xmoney-woocommerce' ),
+			'cart_empty'               => __( 'Cart is empty.', 'xmoney-woocommerce' ),
+			'verification_failed'      => __( 'Payment verification failed. Please contact support.', 'xmoney-woocommerce' ),
+			'payment_failed'           => __( 'Payment failed. Please try again.', 'xmoney-woocommerce' ),
+		);
+	}
+
+	/**
+	 * Get a specific error message.
+	 *
+	 * @param string $key Error message key.
+	 * @return string Error message or empty string if not found.
+	 */
+	public static function get_error( string $key ): string {
+		$messages = self::get_error_messages();
+		return $messages[ $key ] ?? '';
+	}
+
+	/**
+	 * Get order note templates used throughout the plugin.
+	 *
+	 * @return array Associative array of order note templates.
+	 */
+	public static function get_order_notes(): array {
+		return array(
+			'awaiting_payment'          => __( 'Awaiting xMoney payment.', 'xmoney-woocommerce' ),
+			'verified_success'          => __( 'Payment verified via xMoney API. Status: %s', 'xmoney-woocommerce' ),
+			'verified_failed'           => __( 'Payment failed (verified via xMoney API). Status: %s', 'xmoney-woocommerce' ),
+			'verification_error'        => __( 'Payment verification failed: %s. Requires manual review.', 'xmoney-woocommerce' ),
+			'verification_pending'      => __( 'Payment verification failed. Your order is pending review. Please contact support.', 'xmoney-woocommerce' ),
+			'ipn_confirmed'             => __( 'Payment confirmed via xMoney IPN.', 'xmoney-woocommerce' ),
+			'ipn_failed'                => __( 'Payment failed via xMoney IPN.', 'xmoney-woocommerce' ),
+			'ipn_refunded'              => __( 'Payment refunded via xMoney IPN.', 'xmoney-woocommerce' ),
+			'ipn_pending'               => __( 'Payment pending via xMoney IPN.', 'xmoney-woocommerce' ),
+			'ipn_verification_failed'   => __( 'IPN received but API verification failed: %s', 'xmoney-woocommerce' ),
+		);
+	}
+
+	/**
+	 * Get a specific order note template.
+	 *
+	 * @param string $key Order note key.
+	 * @return string Order note template or empty string if not found.
+	 */
+	public static function get_order_note( string $key ): string {
+		$notes = self::get_order_notes();
+		return $notes[ $key ] ?? '';
 	}
 }
 

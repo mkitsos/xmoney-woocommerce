@@ -103,8 +103,7 @@ class XMoney_WC_IPN {
 			// Still return 200 to prevent retries - mark order for manual review.
 			$order->add_order_note(
 				sprintf(
-					/* translators: %s: Error message */
-					__( 'IPN received but API verification failed: %s', 'xmoney-woocommerce' ),
+					XMoney_WC_Helper::get_order_note( 'ipn_verification_failed' ),
 					$verification->get_error_message()
 				)
 			);
@@ -134,7 +133,7 @@ class XMoney_WC_IPN {
 				// Payment successful.
 				if ( ! $order->is_paid() ) {
 					$order->payment_complete();
-					$order->add_order_note( __( 'Payment confirmed via xMoney IPN.', 'xmoney-woocommerce' ) );
+					$order->add_order_note( XMoney_WC_Helper::get_order_note( 'ipn_confirmed' ) );
 
 					// Store transaction ID if provided.
 					if ( isset( $data['transactionId'] ) ) {
@@ -152,20 +151,20 @@ class XMoney_WC_IPN {
 
 			case 'complete-fail':
 				// Payment failed.
-				$order->update_status( 'failed', __( 'Payment failed via xMoney IPN.', 'xmoney-woocommerce' ) );
+				$order->update_status( 'failed', XMoney_WC_Helper::get_order_note( 'ipn_failed' ) );
 				break;
 
 			case 'cancel-ok':
 			case 'refund-ok':
 			case 'void-ok':
 				// Refunded.
-				$order->update_status( 'refunded', __( 'Payment refunded via xMoney IPN.', 'xmoney-woocommerce' ) );
+				$order->update_status( 'refunded', XMoney_WC_Helper::get_order_note( 'ipn_refunded' ) );
 				break;
 
 			case 'three-d-pending':
 			case 'in-progress':
 				// Payment pending.
-				$order->update_status( 'on-hold', __( 'Payment pending via xMoney IPN.', 'xmoney-woocommerce' ) );
+				$order->update_status( 'on-hold', XMoney_WC_Helper::get_order_note( 'ipn_pending' ) );
 				break;
 
 			default:
