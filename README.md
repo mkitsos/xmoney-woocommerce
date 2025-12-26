@@ -1,15 +1,15 @@
-# xMoney for WooCommerce
-
 <div align="center">
   <a href="https://www.xmoney.com">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="./assets/xMoney_White.svg">
-      <img alt="xMoney Logo" src="./assets/xMoney_Black.svg">
+      <img alt="xMoney" src="./assets/xMoney_Black.svg" height="40">
     </picture>
   </a>
+  <h1>xMoney for WooCommerce</h1>
+  <p>
+    Accept credit card, debit card, Google Pay, and Apple Pay payments on your WooCommerce store with xMoney's Embedded Checkout. The payment form integrates directly into your checkout page for a seamless customer experience.
+  </p>
 </div>
-
-Accept credit card, debit card, Google Pay, and Apple Pay payments on your WooCommerce store with xMoney's Embedded Checkout. The payment form integrates directly into your checkout page for a seamless customer experience.
 
 ## Features
 
