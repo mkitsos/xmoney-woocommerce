@@ -1,8 +1,15 @@
 # xMoney for WooCommerce
 
-Accept credit card, debit card, Google Pay, and Apple Pay payments on your WooCommerce store with xMoney's Embedded Checkout. The payment form integrates directly into your checkout page for a seamless customer experience.
+<div align="center">
+  <a href="https://www.xmoney.com">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="./assets/xMoney_White.svg">
+      <img alt="xMoney Logo" src="./assets/xMoney_Black.svg">
+    </picture>
+  </a>
+</div>
 
-![xMoney for WooCommerce](assets/logo.png)
+Accept credit card, debit card, Google Pay, and Apple Pay payments on your WooCommerce store with xMoney's Embedded Checkout. The payment form integrates directly into your checkout page for a seamless customer experience.
 
 ## Features
 
@@ -10,7 +17,6 @@ Accept credit card, debit card, Google Pay, and Apple Pay payments on your WooCo
 
 - ✅ **Embedded Checkout** - Payment form embedded directly on your checkout page
 - ✅ **No Redirects** - Customers stay on your site throughout the payment process
-- ✅ **PCI DSS Compliant** - Card data never touches your servers
 - ✅ **Google Pay** - One-click payments with Google Pay (on supported devices)
 - ✅ **Apple Pay** - One-click payments with Apple Pay (on supported devices)
 - ✅ **Saved Cards** - Optional one-click payments for returning logged-in customers
@@ -23,16 +29,14 @@ Accept credit card, debit card, Google Pay, and Apple Pay payments on your WooCo
 
 ### Security
 
-- ✅ **Server-Side Verification** - Payment status verified via xMoney API (never trusts frontend)
-- ✅ **IPN/Webhooks** - Server-to-server notifications for order status updates
+- ✅ **PCI DSS Compliant** - Card data never touches your servers
 - ✅ **SSL Detection** - Warns if your site doesn't have SSL enabled
 
 ### Merchant Experience
 
-- ✅ **Modern Settings UI** - Clean, intuitive admin interface with tabs
+- ✅ **Modern Settings UI** - Clean, intuitive admin interface
 - ✅ **Auto Environment Detection** - Automatically detects test/live mode from API keys
 - ✅ **Appearance Customization** - Customize payment form colors to match your brand
-- ✅ **Test Mode Indicator** - Clear indication when operating in test mode
 - ✅ **Detailed Order Notes** - Comprehensive payment status in order notes
 
 ## Requirements
