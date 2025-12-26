@@ -593,8 +593,6 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 				<!-- Appearance Tab -->
 				<div class="xmoney-tab-content" data-tab="appearance">
 					<?php
-					// Try to detect theme colors
-					$theme_primary = $this->get_theme_primary_color();
 					$current_primary = $this->get_option('color_primary', '');
 					$current_danger = $this->get_option('color_danger', '');
 					$current_background = $this->get_option('color_background', '');
@@ -661,9 +659,6 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 						</h2>
 						<p class="xmoney-section-description">
 							<?php esc_html_e('Customize the payment form to match your brand. Leave empty to use defaults.', 'xmoney-woocommerce'); ?>
-							<?php if ($theme_primary) : ?>
-								<br><em><?php printf(esc_html__('Detected theme color: %s', 'xmoney-woocommerce'), '<code>' . esc_html($theme_primary) . '</code>'); ?></em>
-							<?php endif; ?>
 						</p>
 
 						<div class="xmoney-color-fields">
@@ -672,8 +667,8 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 									<?php esc_html_e('Primary Color', 'xmoney-woocommerce'); ?>
 								</label>
 								<div class="xmoney-color-input-wrap">
-									<input type="color" id="xmoney_color_primary_picker" value="<?php echo esc_attr($current_primary ?: ($theme_primary ?: '#7c3aed')); ?>" class="xmoney-color-picker-input">
-									<input type="text" id="woocommerce_xmoney_wc_color_primary" name="woocommerce_xmoney_wc_color_primary" value="<?php echo esc_attr($current_primary); ?>" placeholder="<?php echo esc_attr($theme_primary ?: '#7c3aed'); ?>" class="xmoney-color-text">
+									<input type="color" id="xmoney_color_primary_picker" value="<?php echo esc_attr($current_primary ?: '#7c3aed'); ?>" class="xmoney-color-picker-input">
+									<input type="text" id="woocommerce_xmoney_wc_color_primary" name="woocommerce_xmoney_wc_color_primary" value="<?php echo esc_attr($current_primary); ?>" placeholder="#7c3aed" class="xmoney-color-text">
 								</div>
 								<p class="xmoney-field-hint"><?php esc_html_e('Buttons and accent color', 'xmoney-woocommerce'); ?></p>
 							</div>
@@ -775,63 +770,11 @@ class XMoney_WC_Gateway extends WC_Payment_Gateway
 							</div>
 						</div>
 
-						<?php if ($theme_primary) : ?>
-						<button type="button" class="xmoney-btn xmoney-btn-secondary xmoney-use-theme-colors">
-							<?php esc_html_e('Use Theme Colors', 'xmoney-woocommerce'); ?>
-						</button>
-						<?php endif; ?>
 					</div>
 				</div><!-- End Appearance Tab -->
 			</div>
 		</div>
 		<?php
-	}
-
-	/**
-	 * Get primary color from WordPress theme.
-	 *
-	 * @return string|null Primary color hex code or null.
-	 */
-	private function get_theme_primary_color() {
-		// Try to get from theme mods (Customizer settings)
-		$theme_mods = get_theme_mods();
-		
-		// Common theme mod keys for primary/accent color
-		$color_keys = array(
-			'primary_color',
-			'accent_color',
-			'link_color',
-			'main_color',
-			'theme_color',
-			'brand_color',
-			'storefront_accent_color', // Storefront theme
-			'theme_accent_color',
-		);
-		
-		foreach ($color_keys as $key) {
-			if (! empty($theme_mods[$key])) {
-				return $theme_mods[$key];
-			}
-		}
-		
-		// Try global styles (block themes)
-		if (function_exists('wp_get_global_styles')) {
-			$global_styles = wp_get_global_styles();
-			if (! empty($global_styles['color']['background'])) {
-				// Get from palette
-			}
-			if (! empty($global_styles['elements']['link']['color']['text'])) {
-				return $global_styles['elements']['link']['color']['text'];
-			}
-		}
-		
-		// Try to get WooCommerce primary color
-		$wc_primary = get_option('woocommerce_email_base_color', '');
-		if ($wc_primary) {
-			return $wc_primary;
-		}
-		
-		return null;
 	}
 
 	/**

@@ -31,12 +31,6 @@
         $(".xmoney-theme-option").removeClass("active");
         $(this).addClass("active");
       });
-
-      // Use theme colors button
-      $(".xmoney-use-theme-colors").on(
-        "click",
-        this.handleUseThemeColors.bind(this)
-      );
     },
 
     handleTabSwitch: function (e) {
@@ -102,19 +96,6 @@
           $picker.val($text.val());
         }
       });
-    },
-
-    handleUseThemeColors: function (e) {
-      e.preventDefault();
-      var $primaryPicker = $("#xmoney_color_primary_picker");
-      var $primaryText = $("#woocommerce_xmoney_wc_color_primary");
-
-      // Get the placeholder (detected theme color)
-      var themeColor = $primaryText.attr("placeholder");
-      if (themeColor && themeColor !== "#7c3aed") {
-        $primaryPicker.val(themeColor);
-        $primaryText.val(themeColor.toUpperCase());
-      }
     },
   };
 
